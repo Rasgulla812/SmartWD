@@ -1,0 +1,446 @@
+import React, { useState, useRef, useCallback } from 'react';
+import type { WardrobeItem, View } from './types';
+import { classifyImage, recommendOutfit, rateOutfit, type StyleRating } from './services/geminiService';
+import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon } from './components/icons';
+
+const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void }> = ({ activeView, setActiveView }) => {
+  const navItems = [
+    { id: 'wardrobe', icon: ShirtIcon, label: 'My Wardrobe' },
+    { id: 'recommender', icon: SparklesIcon, label: 'Outfit AI' },
+    { id: 'rater', icon: StarIcon, label: 'Style Rater' },
+  ] as const;
+
+  return (
+    <header className="fixed top-0 left-0 right-0 bg-slate-950/20 backdrop-blur-xl z-10 border-b border-white/5">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center py-4">
+          <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-cyan-400 text-transparent bg-clip-text">Clothe.AI</h1>
+          <nav className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-full">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveView(item.id)}
+                className={`group flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 nav-pill ${activeView === item.id ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] scale-105' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                  }`}
+              >
+                <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const WardrobeView: React.FC<{
+  items: WardrobeItem[];
+  onImageUpload: (file: File) => void;
+  isLoading: boolean;
+}> = ({ items, onImageUpload, isLoading }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onImageUpload(file);
+    }
+  };
+
+  return (
+    <div className="space-y-12 animate-fade-in">
+      <div className="relative group p-12 rounded-[2.5rem] border-2 border-dashed border-slate-300 hover:border-slate-900 transition-all duration-500 text-center glass-card shadow-xl hover:shadow-2xl">
+        <div className="absolute inset-0 bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem] pointer-events-none"></div>
+        <div className="relative z-1">
+          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+            <UploadCloudIcon className="h-10 w-10 text-white" />
+          </div>
+          <h3 className="text-3xl font-black text-white mb-3 tracking-tight">Expand Your Wardrobe</h3>
+          <p className="text-slate-300 text-lg max-w-md mx-auto mb-8 font-medium leading-relaxed">Upload photos of your clothes and let AI organize your style.</p>
+          <button
+            onClick={handleUploadClick}
+            disabled={isLoading}
+            className="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-black rounded-2xl text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.4)] disabled:bg-slate-800 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <LoaderIcon className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" />
+                Analyzing Fabric...
+              </>
+            ) : (
+              "Select Image"
+            )}
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
+          />
+        </div>
+      </div>
+
+      {items.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+          {items.map((item) => (
+            <div key={item.id} className="group relative overflow-hidden rounded-3xl shadow-lg aspect-square glass-card p-3 hover:translate-y-[-8px] transition-all duration-300">
+              <div className="w-full h-full overflow-hidden rounded-2xl">
+                <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              </div>
+              <div className="absolute inset-x-3 bottom-3 p-4 bg-white/80 backdrop-blur-md rounded-2xl translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 border border-white/50">
+                <h3 className="text-slate-900 font-bold capitalize text-sm truncate">{item.name}</h3>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 glass-card rounded-[2.5rem] border border-white/50">
+          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ShirtIcon className="h-8 w-8 text-slate-500" />
+          </div>
+          <h3 className="text-2xl font-bold text-white">Your Wardrobe is Empty</h3>
+          <p className="text-slate-400 mt-2 font-medium">The studio is ready. Add your first item to begin.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const OutfitRecommenderView: React.FC<{
+  wardrobeItems: WardrobeItem[];
+  onGetRecommendation: () => void;
+  recommendation: string | null;
+  isLoading: boolean;
+}> = ({ wardrobeItems, onGetRecommendation, recommendation, isLoading }) => {
+  return (
+    <div className="text-center">
+      <div className="max-w-2xl mx-auto">
+        <SparklesIcon className="mx-auto h-16 w-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-full shadow-[0_0_30px_rgba(99,102,241,0.3)]" />
+        <h2 className="mt-6 text-4xl font-black tracking-tight sm:text-5xl text-white">Outfit Recommendation</h2>
+        <p className="mt-4 text-xl text-slate-300 font-medium leading-relaxed">Let our AI stylist create the perfect outfit from your wardrobe.</p>
+        <button
+          onClick={onGetRecommendation}
+          disabled={isLoading || wardrobeItems.length === 0}
+          className="mt-8 inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-black rounded-full text-white bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)] disabled:bg-slate-800 disabled:cursor-not-allowed transition-all duration-300"
+        >
+          {isLoading ? (
+            <>
+              <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+              Thinking...
+            </>
+          ) : (
+            "Generate My Outfit"
+          )}
+        </button>
+        {wardrobeItems.length === 0 && <p className="text-sm mt-4 text-amber-600">Add items to your wardrobe to get a recommendation.</p>}
+      </div>
+
+      {recommendation && (
+        <div className="mt-12 max-w-3xl mx-auto glass-card rounded-3xl p-10 text-left shadow-2xl animate-fade-in border border-white/50">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-10 h-1 h-1 bg-slate-900 rounded-full"></div>
+            <h3 className="text-xl font-bold text-slate-900">Stylist Recommendation</h3>
+          </div>
+          <p className="whitespace-pre-wrap leading-relaxed text-slate-700 text-lg">{recommendation}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const AiOutfitRaterView: React.FC<{
+  onRateOutfit: (description: string, venue: string, weather: string, preference: string) => void;
+  rating: StyleRating | null;
+  isLoading: boolean;
+}> = ({ onRateOutfit, rating, isLoading }) => {
+  const [description, setDescription] = useState('');
+  const [venue, setVenue] = useState('Professional');
+  const [weather, setWeather] = useState('Mild');
+  const [selectedPreference, setSelectedPreference] = useState('Minimalist');
+  const [customPreference, setCustomPreference] = useState('');
+
+  const venues = ['Professional', 'Casual Party', 'College', 'Date Night', 'Formal Event', 'Gym/Athletic'];
+  const weathers = ['Hot/Sunny', 'Cold/Winter', 'Rainy', 'Mild/Spring', 'Humid'];
+  const preferences = ['Minimalist', 'Streetwear', 'Classic Professional', 'Vintage/Retro', 'Avant-garde', 'Bohemian', 'Other'];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (description.trim()) {
+      const finalPreference = selectedPreference === 'Other' ? customPreference : selectedPreference;
+      onRateOutfit(description, venue, weather, finalPreference);
+    }
+  };
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-10 items-start animate-fade-in">
+      <div className="w-full lg:w-1/2 space-y-8">
+        <div className="text-left">
+          <div className="inline-flex items-center justify-center p-4 bg-indigo-600 rounded-[1.5rem] shadow-[0_0_20px_rgba(99,102,241,0.3)] mb-6">
+            <StarIcon className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="text-4xl font-black tracking-tight text-white mb-4">AI Style Critic</h2>
+          <p className="text-lg text-slate-300 leading-relaxed font-medium">Describe your outfit and context. Get a professional rating and tips to make it "super cool" yet professional.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6 glass-card p-8 rounded-[2rem] border border-white/60 shadow-xl">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-slate-300 ml-1">Outfit Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., 'Navy blazer with a white crisp shirt, dark denim jeans...'"
+              className="w-full h-32 p-5 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all duration-300 resize-none font-medium"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
+              <select
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
+              >
+                {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-300 ml-1">Weather Context</label>
+              <select
+                value={weather}
+                onChange={(e) => setWeather(e.target.value)}
+                className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
+              >
+                {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-300 ml-1">Style Preference</label>
+              <select
+                value={selectedPreference}
+                onChange={(e) => setSelectedPreference(e.target.value)}
+                className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
+              >
+                {preferences.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+
+            {selectedPreference === 'Other' && (
+              <div className="space-y-2 animate-fade-in">
+                <input
+                  type="text"
+                  value={customPreference}
+                  onChange={(e) => setCustomPreference(e.target.value)}
+                  placeholder="Describe your custom style preference..."
+                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium"
+                />
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading || !description.trim()}
+            className="w-full inline-flex items-center justify-center px-8 py-5 border border-transparent text-xl font-black rounded-2xl text-white bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.4)] disabled:bg-slate-800 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <LoaderIcon className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" />
+                Reviewing Look...
+              </>
+            ) : (
+              "Rate My Style"
+            )}
+          </button>
+        </form>
+      </div>
+
+      <div className="w-full lg:w-1/2">
+        <div className="relative min-h-[500px] glass-card rounded-[2.5rem] border-4 border-white/40 flex flex-col items-center justify-center p-10 shadow-2xl overflow-hidden">
+          {isLoading && (
+            <div className="absolute inset-0 z-20 bg-slate-950/60 backdrop-blur-xl flex flex-col items-center justify-center text-center p-8">
+              <div className="relative mb-8">
+                <StarIcon className="animate-bounce h-20 w-20 text-indigo-400" />
+                <div className="absolute inset-0 animate-ping opacity-20 bg-indigo-500 rounded-full scale-150"></div>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2">Analyzing Dressing Sense...</h3>
+              <p className="text-slate-400 font-medium">Evaluating color harmony, venue fit, and professionalism.</p>
+            </div>
+          )}
+
+          {!isLoading && !rating && (
+            <div className="text-center">
+              <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner border border-white/5">
+                <StarIcon className="h-10 w-10 text-slate-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Style Report Awaits</h3>
+              <p className="text-slate-300 max-w-xs mx-auto text-lg leading-relaxed font-medium">Submit your outfit details to see how you rank among the stylishly professional.</p>
+            </div>
+          )}
+
+          {rating && !isLoading && (
+            <div className="w-full animate-fade-in">
+              <div className="flex items-center justify-between mb-10">
+                <div className="space-y-1">
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-500">Overall Rating</span>
+                  <div className="flex items-baseline space-x-2">
+                    <h2 className="text-7xl font-black text-white">{rating.score}</h2>
+                    <span className="text-2xl font-bold text-slate-600">/ 10</span>
+                  </div>
+                </div>
+                <div className={`px-6 py-2 rounded-full font-black text-sm uppercase tracking-tighter shadow-lg ${rating.score >= 8 ? 'bg-emerald-500 text-white' : rating.score >= 5 ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'}`}>
+                  {rating.score >= 8 ? 'Elite Style' : rating.score >= 5 ? 'Looking Good' : 'Needs Work'}
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                <div className="p-6 bg-white/5 rounded-3xl border border-white/5">
+                  <h4 className="text-sm font-black text-indigo-400 uppercase tracking-widest mb-4">Professional Critique</h4>
+                  <p className="text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">{rating.explanation}</p>
+                </div>
+
+                <div className="flex items-center space-x-4 text-slate-400 group">
+                  <ThermometerIcon className="h-5 w-5 group-hover:text-sky-500 transition-colors" />
+                  <span className="text-sm font-bold">{weather} adapted</span>
+                  <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
+                  <span className="text-sm font-bold">{venue} ready</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const IntroLoader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const [isActive, setIsActive] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+
+  React.useEffect(() => {
+    // Start the opening animation after a short delay
+    const openTimer = setTimeout(() => setIsActive(true), 1000);
+
+    // Hide the loader completely after animation finishes
+    const hideTimer = setTimeout(() => {
+      setIsHidden(true);
+      onComplete();
+    }, 3000);
+
+    return () => {
+      clearTimeout(openTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [onComplete]);
+
+  if (isHidden) return null;
+
+  return (
+    <div className={`intro-container ${isActive ? 'intro-active' : ''}`}>
+      <div className="cupboard-label">Clothe-AI</div>
+      <div className="door door-left">
+        <div className="handle"></div>
+      </div>
+      <div className="door door-right">
+        <div className="handle"></div>
+      </div>
+      <div className="intro-overlay"></div>
+    </div>
+  );
+};
+
+export default function App() {
+  const [showIntro, setShowIntro] = useState(true);
+  const [activeView, setActiveView] = useState<View>('wardrobe');
+  const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
+  const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [styleRating, setStyleRating] = useState<StyleRating | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleImageUpload = useCallback(async (file: File) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const name = await classifyImage(file);
+      const newItem: WardrobeItem = {
+        id: new Date().toISOString(),
+        name,
+        imageUrl: URL.createObjectURL(file),
+      };
+      setWardrobeItems(prev => [newItem, ...prev]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleGetRecommendation = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setRecommendation(null);
+    try {
+      const itemNames = wardrobeItems.map(item => item.name);
+      const result = await recommendOutfit(itemNames);
+      setRecommendation(result);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [wardrobeItems]);
+
+  const handleRateOutfit = useCallback(async (description: string, venue: string, weather: string, preference: string) => {
+    setIsLoading(true);
+    setError(null);
+    setStyleRating(null);
+    try {
+      const result = await rateOutfit(description, venue, weather, preference);
+      setStyleRating(result);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return (
+    <>
+      {showIntro && <IntroLoader onComplete={() => setShowIntro(false)} />}
+      <div className={`min-h-screen bg-professional text-slate-100 transition-all duration-1000 ${showIntro ? 'opacity-0 scale-95 blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
+        <div className="bg-blob" style={{ top: '-10%', left: '-5%' }}></div>
+        <div className="bg-blob-2"></div>
+
+        <Header activeView={activeView} setActiveView={setActiveView} />
+
+        <main className="container mx-auto px-4 pt-32 pb-12 relative z-1">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-6 py-4 rounded-2xl relative mb-8 animate-shake shadow-sm backdrop-blur-md" role="alert">
+              <strong className="font-bold">System Note: </strong>
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
+          <div className="animate-fade-in delay-200">
+            {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} isLoading={isLoading} />}
+            {activeView === 'recommender' && <OutfitRecommenderView wardrobeItems={wardrobeItems} onGetRecommendation={handleGetRecommendation} recommendation={recommendation} isLoading={isLoading} />}
+            {activeView === 'rater' && <AiOutfitRaterView onRateOutfit={handleRateOutfit} rating={styleRating} isLoading={isLoading} />}
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}

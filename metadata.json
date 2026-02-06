@@ -1,0 +1,5 @@
+{
+  "name": "Clothe-AI: Smart Wardrobe",
+  "description": "An intelligent wardrobe manager that classifies your clothes from images, recommends daily outfits, and lets you design new styles with AI.",
+  "requestFramePermissions": []
+}
