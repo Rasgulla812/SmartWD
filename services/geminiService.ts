@@ -6,17 +6,17 @@ const getAPIKey = (): string => {
   if (envKey) {
     return envKey;
   }
-
+  
   // Fallback to window object (set in HTML)
   const windowKey = (window as any).GOOGLE_API_KEY;
-
+  
   console.log('API Key source:', envKey ? 'environment' : windowKey ? 'window' : 'NOT FOUND');
   console.log('API Key found:', windowKey ? `${windowKey.substring(0, 10)}...` : 'NOT SET');
-
+  
   if (!windowKey || windowKey === 'YOUR_GOOGLE_API_KEY_HERE') {
     throw new Error("GOOGLE_API_KEY not configured");
   }
-
+  
   return windowKey;
 };
 
@@ -24,7 +24,7 @@ const initializeAI = async () => {
   if (ai) {
     return ai;
   }
-
+  
   try {
     const { GoogleGenerativeAI } = await import("@google/generative-ai");
     const API_KEY = getAPIKey();
@@ -63,11 +63,11 @@ export const classifyImage = async (file: File): Promise<string> => {
     const textPart = {
       text: "Analyze this image of a clothing item. Provide a short, descriptive name for it (e.g., 'blue denim jacket', 'striped cotton t-shirt', 'black leather boots'). Respond with only the name.",
     };
-    const model = ai.getGenerativeModel({ model: 'gemini-.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
       contents: [{ parts: [imagePart, textPart] }]
     });
-
+    
     const result = await response.response;
     const text = result.text();
     return text.trim() || "Clothing item";
@@ -84,15 +84,15 @@ export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> 
   if (wardrobeItems.length === 0) {
     return "Your wardrobe is empty! Add some clothes to get an outfit recommendation.";
   }
-
+  
   try {
     const prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${wardrobeItems.join('\n- ')}\n\nRecommendation:`;
-
+    
     const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
-      contents: [{ parts: [{ text: prompt }] }]
+        contents: [{ parts: [{ text: prompt }] }]
     });
-
+    
     const result = await response.response;
     return result.text() || "Unable to generate recommendation";
   } catch (error) {
@@ -101,56 +101,34 @@ export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> 
   }
 };
 
-export interface StyleRating {
-  score: number;
-  explanation: string;
-  tips: string[];
-}
-
-export const rateOutfit = async (
-  description: string,
-  venue: string,
-  weather: string,
-  preference: string
-): Promise<StyleRating> => {
+export const generateImage = async (prompt: string): Promise<string> => {
   if (!ai) {
     await initializeAI();
   }
-
   try {
     const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
-    const prompt = `
-      Act as a high-end professional fashion consultant and style critic. 
-      Rate the following outfit description based on the provided context.
-      
-      Outfit Description: "${description}"
-      Venue/Occasion: "${venue}"
-      Weather: "${weather}"
-      User Preference/Style: "${preference}"
-      
-      Provide your response in a clear JSON-like format (but as plain text) with:
-      1. A score from 1-10.
-      2. A detailed professional explanation.
-      3. 3-4 specific style tips to make it "super cool" yet professional.
-      
-      Be sophisticated, encouraging, but honest.
-    `;
+    const response = await model.generateContent({
+      contents: [{
+        parts: [{
+          text: `Generate a high-quality, photorealistic image of a clothing item or outfit: ${prompt}. The item should be displayed on a neutral, clean background.`
+        }]
+      }]
+    });
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    // Simple parsing logic or just return as structured object if we trust AI formatting
-    // For robustness, let's ask for specific markers
-    const scoreMatch = text.match(/Score:\s*(\d+)/i) || text.match(/(\d+)\/10/);
-    const score = scoreMatch ? parseInt(scoreMatch[1]) : 7;
-
-    return {
-      score,
-      explanation: text,
-      tips: [] // Tips are included in the explanation text for now
-    };
+    const result = await response.response;
+    const content = result.candidates?.[0]?.content;
+    
+    if (content?.parts) {
+      for (const part of content.parts) {
+        if ('inlineData' in part && part.inlineData?.data) {
+          return `data:image/jpeg;base64,${part.inlineData.data}`;
+        }
+      }
+    }
+    
+    throw new Error("No image data in response");
   } catch (error) {
-    console.error("Error rating outfit:", error);
-    throw new Error(`Failed to rate outfit: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Error generating image:", error);
+    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
