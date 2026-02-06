@@ -11,16 +11,18 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void }
   ] as const;
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-slate-950/20 backdrop-blur-xl z-10 border-b border-white/5">
+    <header className="fixed top-0 left-0 right-0 bg-slate-950/60 backdrop-blur-2xl z-20 border-b border-white/10 shadow-2xl">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-cyan-400 text-transparent bg-clip-text">Clothe.AI</h1>
-          <nav className="hidden md:flex items-center space-x-2 bg-slate-100 p-1 rounded-full">
+          <nav className="hidden md:flex items-center space-x-2 bg-white/5 backdrop-blur-lg p-1.5 rounded-full border border-white/10">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
-                className={`group flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 nav-pill ${activeView === item.id ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)] scale-105' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                className={`group flex items-center space-x-3 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeView === item.id
+                  ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] scale-105'
+                  : 'text-slate-300 hover:bg-white/5 hover:text-white'
                   }`}
               >
                 <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
