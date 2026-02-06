@@ -151,7 +151,7 @@ export const generateImage = async (prompt: string): Promise<string> => {
     await initializeAI();
   }
   try {
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
       contents: [{
         parts: [{
