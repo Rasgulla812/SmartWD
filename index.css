@@ -112,13 +112,21 @@ html {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: 900;
     letter-spacing: -0.05em;
     opacity: 1;
     transition: opacity 0.5s ease;
     z-index: 4;
     text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .cupboard-label {
+        font-size: 4rem;
+    }
 }
 
 .intro-active .cupboard-label {
@@ -164,16 +172,26 @@ html {
 
 .bg-blob {
     position: fixed;
-    width: 60vw;
-    height: 60vw;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0, rgba(99, 102, 241, 0) 70%);
+    width: 100vw;
+    height: 100vw;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0, rgba(99, 102, 241, 0) 70%);
     border-radius: 50%;
-    filter: blur(80px);
+    filter: blur(60px);
     z-index: -1;
     pointer-events: none;
     animation: auroraFloat 20s infinite alternate ease-in-out;
-    top: -10%;
-    left: -10%;
+    top: -20%;
+    left: -20%;
+}
+
+@media (min-width: 1024px) {
+    .bg-blob {
+        width: 60vw;
+        height: 60vw;
+        filter: blur(80px);
+        top: -10%;
+        left: -10%;
+    }
 }
 
 @keyframes auroraFloat {
@@ -237,16 +255,26 @@ html {
 
 .bg-blob-2 {
     position: fixed;
-    width: 50vw;
-    height: 50vw;
-    bottom: -10%;
-    right: -10%;
-    background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0, rgba(236, 72, 153, 0) 70%);
+    width: 90vw;
+    height: 90vw;
+    bottom: -20%;
+    right: -20%;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0, rgba(236, 72, 153, 0) 70%);
     border-radius: 50%;
-    filter: blur(100px);
+    filter: blur(80px);
     z-index: -1;
     pointer-events: none;
     animation: auroraFloat 25s infinite alternate-reverse ease-in-out;
+}
+
+@media (min-width: 1024px) {
+    .bg-blob-2 {
+        width: 50vw;
+        height: 50vw;
+        filter: blur(100px);
+        bottom: -10%;
+        right: -10%;
+    }
 }
 
 .nav-pill {
