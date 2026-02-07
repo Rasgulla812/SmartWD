@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { WardrobeItem, View } from './types';
 import { classifyImage, recommendOutfit, rateOutfit, type StyleRating } from './services/geminiService';
-import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon } from './components/icons';
+import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon } from './components/icons';
 
-const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void }> = ({ activeView, setActiveView }) => {
+const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void }> = ({ activeView, setActiveView, theme, toggleTheme }) => {
   const navItems = [
     { id: 'wardrobe', icon: ShirtIcon, label: 'Wardrobe' },
     { id: 'recommender', icon: SparklesIcon, label: 'Outfit AI' },
@@ -30,6 +30,18 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void }
                   <span>{item.label}</span>
                 </button>
               ))}
+              <div className="w-px h-6 bg-white/10 mx-2"></div>
+              <button
+                onClick={toggleTheme}
+                className="p-2.5 rounded-full text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-300 group"
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {theme === 'dark' ? (
+                  <SunIcon className="w-5 h-5 transition-transform group-hover:rotate-45" />
+                ) : (
+                  <MoonIcon className="w-5 h-5 transition-transform group-hover:-rotate-12" />
+                )}
+              </button>
             </nav>
             <div className="md:hidden text-xs font-black uppercase tracking-widest text-slate-500">
               Smart Wardrobe
@@ -53,6 +65,17 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void }
             <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
           </button>
         ))}
+        <button
+          onClick={toggleTheme}
+          className="flex flex-col items-center space-y-1 px-4 py-3 rounded-2xl transition-all duration-300 text-slate-500"
+        >
+          {theme === 'dark' ? (
+            <SunIcon className="w-6 h-6 stroke-2" />
+          ) : (
+            <MoonIcon className="w-6 h-6 stroke-2" />
+          )}
+          <span className="text-[10px] font-black uppercase tracking-tighter">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+        </button>
       </nav>
     </>
   );
@@ -398,6 +421,26 @@ export default function App() {
   const [styleRating, setStyleRating] = useState<StyleRating | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'dark';
+    }
+    return 'dark';
+  });
+
+  React.useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'light') {
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  }, []);
 
   const handleImageUpload = useCallback(async (file: File) => {
     setIsLoading(true);
@@ -453,7 +496,7 @@ export default function App() {
         <div className="bg-blob" style={{ top: '-10%', left: '-5%' }}></div>
         <div className="bg-blob-2"></div>
 
-        <Header activeView={activeView} setActiveView={setActiveView} />
+        <Header activeView={activeView} setActiveView={setActiveView} theme={theme} toggleTheme={toggleTheme} />
 
         <main className="container mx-auto px-6 pt-28 md:pt-36 pb-32 md:pb-12 relative z-1">
           {error && (
