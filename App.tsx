@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { WardrobeItem, View } from './types';
 import { classifyImage, recommendOutfit, rateOutfit, type StyleRating } from './services/geminiService';
-import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon } from './components/icons';
+import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon } from './components/icons';
 
 const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void }> = ({ activeView, setActiveView, theme, toggleTheme }) => {
   const navItems = [
@@ -86,10 +86,15 @@ const WardrobeView: React.FC<{
   onImageUpload: (file: File) => void;
   isLoading: boolean;
 }> = ({ items, onImageUpload, isLoading }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
+  const handleGalleryClick = () => {
+    galleryInputRef.current?.click();
+  };
+
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +102,8 @@ const WardrobeView: React.FC<{
     if (file) {
       onImageUpload(file);
     }
+    // Reset value so same file can be uploaded again if needed
+    event.target.value = '';
   };
 
   return (
@@ -108,27 +115,60 @@ const WardrobeView: React.FC<{
             <UploadCloudIcon className="h-8 w-8 md:h-10 md:w-10 text-white" />
           </div>
           <h3 className="text-2xl md:text-3xl font-black text-white mb-2 md:mb-3 tracking-tight">Expand Your Wardrobe</h3>
-          <p className="text-slate-400 text-base md:text-lg max-w-md mx-auto mb-6 md:mb-8 font-medium leading-relaxed">Upload photos of your clothes and let AI organize your style.</p>
-          <button
-            onClick={handleUploadClick}
-            disabled={isLoading}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-transparent text-base md:text-lg font-black rounded-xl md:rounded-2xl text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.4)] disabled:bg-slate-800 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 md:h-6 md:w-6 text-white" />
-                Analyzing...
-              </>
-            ) : (
-              "Select Image"
-            )}
-          </button>
+          <p className="text-slate-400 text-base md:text-lg max-w-md mx-auto mb-6 md:mb-8 font-medium leading-relaxed px-4">Choose your preferred method to add new clothes to your collection.</p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={handleGalleryClick}
+              disabled={isLoading}
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-transparent text-base md:text-lg font-black rounded-xl md:rounded-2xl text-white bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.4)] disabled:bg-slate-800 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 md:h-6 md:w-6 text-white" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <UploadCloudIcon className="w-5 h-5 mr-3" />
+                  Gallery
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleCameraClick}
+              disabled={isLoading}
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-white/10 text-base md:text-lg font-black rounded-xl md:rounded-2xl text-white bg-white/5 hover:bg-white/10 active:scale-95 transition-all duration-300 backdrop-blur-lg disabled:bg-slate-800 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 md:h-6 md:w-6 text-white" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CameraIcon className="w-5 h-5 mr-3" />
+                  Camera
+                </>
+              )}
+            </button>
+          </div>
+
           <input
             type="file"
-            ref={fileInputRef}
+            ref={galleryInputRef}
             onChange={handleFileChange}
             className="hidden"
             accept="image/*"
+          />
+          <input
+            type="file"
+            ref={cameraInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*"
+            capture="environment"
           />
         </div>
       </div>
