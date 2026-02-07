@@ -14,8 +14,8 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
     <>
       <header className="fixed top-0 left-0 right-0 bg-slate-950/60 backdrop-blur-2xl z-20 border-b border-white/10 shadow-2xl">
         <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center py-5">
-            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-cyan-400 text-transparent bg-clip-text">Clothe.AI</h1>
+          <div className="flex justify-between items-center py-4 md:py-5">
+            <h1 className="text-xl md:text-2xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-cyan-400 text-transparent bg-clip-text">Clothe.AI</h1>
             <nav className="hidden md:flex items-center space-x-2 bg-white/5 backdrop-blur-lg p-1.5 rounded-full border border-white/10">
               {navItems.map((item) => (
                 <button
@@ -51,7 +51,7 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-6 left-6 right-6 bg-slate-950/80 backdrop-blur-2xl z-30 flex items-center justify-around p-2 rounded-[2rem] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <nav className="md:hidden fixed bottom-5 left-4 right-4 bg-slate-950/80 backdrop-blur-3xl z-30 flex items-center justify-around p-1.5 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -61,20 +61,20 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
               : 'text-slate-500'
               }`}
           >
-            <item.icon className={`w-6 h-6 ${activeView === item.id ? 'stroke-[2.5px]' : 'stroke-2'}`} />
-            <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
+            <item.icon className={`w-5 h-5 ${activeView === item.id ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+            <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
           </button>
         ))}
         <button
           onClick={toggleTheme}
-          className="flex flex-col items-center space-y-1 px-4 py-3 rounded-2xl transition-all duration-300 text-slate-500"
+          className="flex flex-col items-center space-y-1 px-3 py-2.5 rounded-2xl transition-all duration-300 text-slate-500"
         >
           {theme === 'dark' ? (
-            <SunIcon className="w-6 h-6 stroke-2" />
+            <SunIcon className="w-5 h-5 stroke-2" />
           ) : (
-            <MoonIcon className="w-6 h-6 stroke-2" />
+            <MoonIcon className="w-5 h-5 stroke-2" />
           )}
-          <span className="text-[10px] font-black uppercase tracking-tighter">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+          <span className="text-[9px] font-black uppercase tracking-tighter">{theme === 'dark' ? 'Light' : 'Dark'}</span>
         </button>
       </nav>
     </>
@@ -140,8 +140,8 @@ const WardrobeView: React.FC<{
               <div className="w-full h-full overflow-hidden rounded-2xl">
                 <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
-              <div className="absolute inset-x-3 bottom-3 p-4 bg-white/80 backdrop-blur-md rounded-2xl translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 border border-white/50">
-                <h3 className="text-slate-900 font-bold capitalize text-sm truncate">{item.name}</h3>
+              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/90 backdrop-blur-md rounded-xl md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 border border-white/50">
+                <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate">{item.name}</h3>
               </div>
             </div>
           ))}
@@ -151,8 +151,8 @@ const WardrobeView: React.FC<{
           <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
             <ShirtIcon className="h-8 w-8 text-slate-500" />
           </div>
-          <h3 className="text-2xl font-bold text-white">Your Wardrobe is Empty</h3>
-          <p className="text-slate-400 mt-2 font-medium">The studio is ready. Add your first item to begin.</p>
+          <h3 className="text-xl md:text-2xl font-bold text-white">Your Wardrobe is Empty</h3>
+          <p className="text-slate-400 mt-2 text-sm md:text-base font-medium px-4">The studio is ready. Add your first item to begin.</p>
         </div>
       )}
     </div>
@@ -170,8 +170,8 @@ const OutfitRecommenderView: React.FC<{
     <div className="text-center">
       <div className="max-w-2xl mx-auto">
         <SparklesIcon className="mx-auto h-16 w-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-full shadow-[0_0_30px_rgba(99,102,241,0.3)]" />
-        <h2 className="mt-6 text-3xl font-black tracking-tight sm:text-5xl text-white">Outfit Recommendation</h2>
-        <p className="mt-4 text-base md:text-xl text-slate-300 font-medium leading-relaxed px-4">Let our AI stylist create the perfect outfit from your wardrobe.</p>
+        <h2 className="mt-6 text-2xl font-black tracking-tight sm:text-5xl text-white px-2">Outfit Recommendation</h2>
+        <p className="mt-3 text-sm md:text-xl text-slate-300 font-medium leading-relaxed px-4 opacity-80">Let our AI stylist create the perfect outfit from your wardrobe.</p>
         <button
           onClick={onGetRecommendation}
           disabled={isLoading || wardrobeItems.length === 0}
@@ -321,8 +321,8 @@ const AiOutfitRaterView: React.FC<{
                 <StarIcon className="animate-bounce h-16 w-16 md:h-20 md:w-20 text-indigo-400" />
                 <div className="absolute inset-0 animate-ping opacity-20 bg-indigo-500 rounded-full scale-150"></div>
               </div>
-              <h3 className="text-xl md:text-2xl font-black text-white mb-2">Analyzing Style...</h3>
-              <p className="text-slate-400 text-sm md:text-base font-medium">Evaluating color harmony and occasion fit.</p>
+              <h3 className="text-lg md:text-2xl font-black text-white mb-2">Analyzing Style...</h3>
+              <p className="text-slate-400 text-xs md:text-base font-medium">Evaluating color harmony and occasion fit.</p>
             </div>
           )}
 
@@ -331,22 +331,22 @@ const AiOutfitRaterView: React.FC<{
               <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner border border-white/5">
                 <StarIcon className="h-10 w-10 text-slate-500" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Style Report Awaits</h3>
-              <p className="text-slate-300 max-w-xs mx-auto text-lg leading-relaxed font-medium">Submit your outfit details to see how you rank among the stylishly professional.</p>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-3 tracking-tight">Style Report Awaits</h3>
+              <p className="text-slate-300 max-w-[240px] md:max-w-xs mx-auto text-base md:text-lg leading-relaxed font-medium px-4">Submit your outfit details to see how you rank among the stylishly professional.</p>
             </div>
           )}
 
           {rating && !isLoading && (
             <div className="w-full animate-fade-in">
-              <div className="flex flex-col sm:flex-row items-center justify-between mb-8 md:mb-10 gap-4 sm:gap-0">
-                <div className="space-y-1 text-center sm:text-left">
-                  <span className="text-xs font-black uppercase tracking-widest text-slate-500">Overall Rating</span>
-                  <div className="flex items-baseline justify-center sm:justify-start space-x-2">
-                    <h2 className="text-6xl md:text-7xl font-black text-white">{rating.score}</h2>
-                    <span className="text-xl md:text-2xl font-bold text-slate-600">/ 10</span>
+              <div className="flex flex-col xs:flex-row items-center justify-between mb-8 md:mb-10 gap-6 xs:gap-0 mt-4 md:mt-0">
+                <div className="space-y-1 text-center xs:text-left">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Overall Rating</span>
+                  <div className="flex items-baseline justify-center xs:justify-start space-x-2">
+                    <h2 className="text-5xl md:text-7xl font-black text-white">{rating.score}</h2>
+                    <span className="text-lg md:text-2xl font-bold text-slate-600">/ 10</span>
                   </div>
                 </div>
-                <div className={`px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-tighter shadow-lg ${rating.score >= 8 ? 'bg-emerald-500 text-white' : rating.score >= 5 ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'}`}>
+                <div className={`px-5 py-2.5 rounded-full font-black text-[10px] md:text-sm uppercase tracking-tighter shadow-lg shrink-0 ${rating.score >= 8 ? 'bg-emerald-500 text-white' : rating.score >= 5 ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'}`}>
                   {rating.score >= 8 ? 'Elite Style' : rating.score >= 5 ? 'Looking Good' : 'Needs Work'}
                 </div>
               </div>
@@ -498,7 +498,7 @@ export default function App() {
 
         <Header activeView={activeView} setActiveView={setActiveView} theme={theme} toggleTheme={toggleTheme} />
 
-        <main className="container mx-auto px-6 pt-28 md:pt-36 pb-32 md:pb-12 relative z-1">
+        <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-36 pb-32 md:pb-12 relative z-1">
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-6 py-4 rounded-2xl relative mb-8 animate-shake shadow-sm backdrop-blur-md" role="alert">
               <strong className="font-bold">System Note: </strong>

@@ -391,3 +391,82 @@ html {
     color: var(--text-secondary) !important;
     opacity: 0.5;
 }
+
+/* --- Mobile Specific Refinements --- */
+
+@media (max-width: 640px) {
+
+    h1,
+    h2,
+    h3 {
+        letter-spacing: -0.02em;
+    }
+
+    .glass-card {
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+    }
+
+    .bg-blob,
+    .bg-blob-2 {
+        opacity: 0.5;
+        /* Reduce intensity on mobile for better text readability */
+    }
+
+    /* Fixed container max-width for better mobile padding */
+    .container {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+}
+
+/* Touch device handling for wardrobe items - since hover doesn't exist */
+@media (hover: none) {
+    .glass-card div[class*="absolute"] {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Animation performance optimization for mobile */
+@media (prefers-reduced-motion: reduce) {
+
+    .bg-blob,
+    .bg-blob-2,
+    .animate-fade-in {
+        animation: none;
+    }
+}
+
+/* Indigo refinement for light mode */
+:root.light .bg-indigo-600 {
+    background-color: var(--accent-color) !important;
+}
+
+:root.light .text-indigo-600 {
+    color: var(--accent-color) !important;
+}
+
+:root.light .text-indigo-400 {
+    color: var(--accent-color) !important;
+}
+
+:root.light .from-indigo-400 {
+    --tw-gradient-from: var(--accent-color) !important;
+}
+
+:root.light .to-cyan-400 {
+    --tw-gradient-to: #0891b2 !important;
+}
+
+:root.light .border-indigo-500 {
+    border-color: var(--accent-color) !important;
+}
+
+:root.light .focus\:border-indigo-500:focus {
+    border-color: var(--accent-color) !important;
+}
+
+:root.light .bg-indigo-500 {
+    background-color: var(--accent-color) !important;
+}
