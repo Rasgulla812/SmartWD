@@ -1,23 +1,14 @@
 let ai: any;
 
 const getAPIKey = (): string => {
-  // Try environment variable first (Vite exposes VITE_ prefixed vars)
   const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (envKey) {
+
+  if (envKey && envKey !== 'YOUR_API_KEY_HERE') {
     return envKey;
   }
 
-  // Fallback to window object (set in HTML)
-  const windowKey = (window as any).GOOGLE_API_KEY;
-
-  console.log('API Key source:', envKey ? 'environment' : windowKey ? 'window' : 'NOT FOUND');
-  console.log('API Key found:', windowKey ? `${windowKey.substring(0, 10)}...` : 'NOT SET');
-
-  if (!windowKey || windowKey === 'YOUR_GOOGLE_API_KEY_HERE') {
-    throw new Error("GOOGLE_API_KEY not configured");
-  }
-
-  return windowKey;
+  console.error('VITE_GEMINI_API_KEY not found in environment.');
+  throw new Error("Gemini API Key is not configured. Please set VITE_GEMINI_API_KEY in your .env.local file and restart the dev server.");
 };
 
 const initializeAI = async () => {
@@ -78,7 +69,7 @@ export const rateOutfit = async (description: string, venue: string, weather: st
       "explanation": "Your detailed critique here..."
     }`;
 
-    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
       contents: [{ parts: [{ text: prompt }] }]
     });
@@ -108,7 +99,7 @@ export const classifyImage = async (file: File): Promise<string> => {
     const textPart = {
       text: "Analyze this image of a clothing item. Provide a short, descriptive name for it (e.g., 'blue denim jacket', 'striped cotton t-shirt', 'black leather boots'). Respond with only the name.",
     };
-    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
       contents: [{ parts: [imagePart, textPart] }]
     });
@@ -133,7 +124,7 @@ export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> 
   try {
     const prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${wardrobeItems.join('\n- ')}\n\nRecommendation:`;
 
-    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
       contents: [{ parts: [{ text: prompt }] }]
     });
@@ -151,7 +142,7 @@ export const generateImage = async (prompt: string): Promise<string> => {
     await initializeAI();
   }
   try {
-    const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const response = await model.generateContent({
       contents: [{
         parts: [{
