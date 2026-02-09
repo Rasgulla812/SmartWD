@@ -243,34 +243,17 @@ const OutfitRecommenderView: React.FC<{
 };
 
 
-const ToggleSwitch: React.FC<{
-  enabled: boolean;
-  onChange: () => void;
-  label: string;
-}> = ({ enabled, onChange, label }) => {
-  return (
-    <div className="flex items-center justify-between p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl hover:border-indigo-500/50 transition-all duration-300">
-      <span className="text-sm font-bold text-slate-300 ml-1">{label}</span>
-      <label className="toggle-switch">
-        <input type="checkbox" checked={enabled} onChange={onChange} />
-        <span className="toggle-slider"></span>
-      </label>
-    </div>
-  );
-};
-
 const AiOutfitRaterView: React.FC<{
-  onRateOutfit: (description: string, strict: boolean) => void;
+  onRateOutfit: (description: string) => void;
   rating: StyleRating | null;
   isLoading: boolean;
 }> = ({ onRateOutfit, rating, isLoading }) => {
   const [description, setDescription] = useState('');
-  const [strict, setStrict] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim()) {
-      onRateOutfit(description, strict);
+      onRateOutfit(description);
     }
   };
 
@@ -296,13 +279,7 @@ const AiOutfitRaterView: React.FC<{
             />
           </div>
 
-          <div className="pt-2">
-            <ToggleSwitch
-              enabled={strict}
-              onChange={() => setStrict(!strict)}
-              label="Savage Critique Mode"
-            />
-          </div>
+
 
           <button
             type="submit"
@@ -368,7 +345,7 @@ const AiOutfitRaterView: React.FC<{
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-slate-400 group">
                   <div className="flex items-center space-x-2">
                     <SparklesIcon className="h-4 w-4 md:h-5 md:w-5 group-hover:text-indigo-400 transition-colors" />
-                    <span className="text-xs md:text-sm font-bold">{strict ? 'Savage Mode' : 'Standard Mode'}</span>
+                    <span className="text-xs md:text-sm font-bold">Standard Mode</span>
                   </div>
                   <span className="hidden sm:block h-1 w-1 bg-slate-600 rounded-full"></span>
                   <div className="flex items-center space-x-2">
@@ -483,12 +460,12 @@ export default function App() {
     }
   }, [wardrobeItems]);
 
-  const handleRateOutfit = useCallback(async (description: string, strict: boolean) => {
+  const handleRateOutfit = useCallback(async (description: string) => {
     setIsLoading(true);
     setError(null);
     setStyleRating(null);
     try {
-      const result = await rateOutfit(description, strict);
+      const result = await rateOutfit(description, false);
       setStyleRating(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");
