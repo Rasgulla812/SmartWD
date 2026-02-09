@@ -51,16 +51,18 @@ export interface StyleRating {
   explanation: string;
 }
 
-export const rateOutfit = async (description: string, strict: boolean = false): Promise<StyleRating> => {
+export const rateOutfit = async (description: string, venue: string, weather: string, preference: string, strict: boolean = false): Promise<StyleRating> => {
   if (!ai) {
     await initializeAI();
   }
 
   try {
-    const prompt = `Rate the following outfit:
+    const prompt = `Rate the following outfit based on the context:
     Description: ${description}
-    
-    Context: ${strict ? 'STRICT MODE: Be very critical and honest. Don\'t hold back on suggesting improvements even if the outfit is good.' : 'Be encouraging but professional.'}
+    Venue: ${venue}
+    Weather: ${weather}
+    Style Preference: ${preference}
+    ${strict ? 'STRICT MODE: Be very critical and honest. Don\'t hold back on suggesting improvements even if the outfit is good.' : 'Be encouraging but professional.'}
     
     Provide a score between 1 and 10 and a detailed professional critique.
     Format your response as a JSON object like this:

@@ -243,17 +243,43 @@ const OutfitRecommenderView: React.FC<{
 };
 
 
+const ToggleSwitch: React.FC<{
+  enabled: boolean;
+  onChange: () => void;
+  label: string;
+}> = ({ enabled, onChange, label }) => {
+  return (
+    <div className="flex items-center justify-between p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl hover:border-indigo-500/50 transition-all duration-300">
+      <span className="text-sm font-bold text-slate-300 ml-1">{label}</span>
+      <label className="toggle-switch">
+        <input type="checkbox" checked={enabled} onChange={onChange} />
+        <span className="toggle-slider"></span>
+      </label>
+    </div>
+  );
+};
+
 const AiOutfitRaterView: React.FC<{
-  onRateOutfit: (description: string) => void;
+  onRateOutfit: (description: string, venue: string, weather: string, preference: string, strict: boolean) => void;
   rating: StyleRating | null;
   isLoading: boolean;
 }> = ({ onRateOutfit, rating, isLoading }) => {
   const [description, setDescription] = useState('');
+  const [venue, setVenue] = useState('Professional');
+  const [weather, setWeather] = useState('Mild');
+  const [selectedPreference, setSelectedPreference] = useState('Minimalist');
+  const [customPreference, setCustomPreference] = useState('');
+  const [strict, setStrict] = useState(false);
+
+  const venues = ['Professional', 'Casual Party', 'College', 'Date Night', 'Formal Event', 'Gym/Athletic'];
+  const weathers = ['Hot/Sunny', 'Cold/Winter', 'Rainy', 'Mild/Spring', 'Humid'];
+  const preferences = ['Minimalist', 'Streetwear', 'Classic Professional', 'Vintage/Retro', 'Avant-garde', 'Bohemian', 'Other'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim()) {
-      onRateOutfit(description);
+      const finalPreference = selectedPreference === 'Other' ? customPreference : selectedPreference;
+      onRateOutfit(description, venue, weather, finalPreference, strict);
     }
   };
 
@@ -276,6 +302,71 @@ const AiOutfitRaterView: React.FC<{
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g., 'Navy blazer with a white crisp shirt, dark denim jeans...'"
               className="w-full h-32 p-4 md:p-5 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all duration-300 resize-none font-medium text-sm md:text-base"
+            />
+          </div>
+
+          <div className="space-y-6 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
+                <div className="relative">
+                  <select
+                    value={venue}
+                    onChange={(e) => setVenue(e.target.value)}
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
+                  >
+                    {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-300 ml-1">Weather Context</label>
+                <div className="relative">
+                  <select
+                    value={weather}
+                    onChange={(e) => setWeather(e.target.value)}
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
+                  >
+                    {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-300 ml-1">Style Preference</label>
+                <div className="relative">
+                  <select
+                    value={selectedPreference}
+                    onChange={(e) => setSelectedPreference(e.target.value)}
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
+                  >
+                    {preferences.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
+              </div>
+
+              {selectedPreference === 'Other' && (
+                <div className="space-y-2 animate-fade-in">
+                  <input
+                    type="text"
+                    value={customPreference}
+                    onChange={(e) => setCustomPreference(e.target.value)}
+                    placeholder="Describe your custom style preference..."
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium"
+                  />
+                </div>
+              )}
+            </div>
+
+            <ToggleSwitch
+              enabled={strict}
+              onChange={() => setStrict(!strict)}
+              label="Savage Critique Mode"
             />
           </div>
 
@@ -345,12 +436,17 @@ const AiOutfitRaterView: React.FC<{
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-slate-400 group">
                   <div className="flex items-center space-x-2">
                     <SparklesIcon className="h-4 w-4 md:h-5 md:w-5 group-hover:text-indigo-400 transition-colors" />
-                    <span className="text-xs md:text-sm font-bold">Standard Mode</span>
+                    <span className="text-xs md:text-sm font-bold">{strict ? 'Savage Mode' : 'Standard Mode'}</span>
                   </div>
                   <span className="hidden sm:block h-1 w-1 bg-slate-600 rounded-full"></span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs md:text-sm font-bold uppercase tracking-tighter opacity-50">Analysis Type</span>
-                    <span className="text-xs md:text-sm font-bold text-slate-300">Style Critique</span>
+                    <ThermometerIcon className="h-4 w-4 md:h-5 md:w-5 group-hover:text-sky-500 transition-colors" />
+                    <span className="text-xs md:text-sm font-bold">{weather}</span>
+                  </div>
+                  <span className="hidden sm:block h-1 w-1 bg-slate-600 rounded-full"></span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-tighter opacity-50">Event</span>
+                    <span className="text-xs md:text-sm font-bold text-slate-300">{venue}</span>
                   </div>
                 </div>
               </div>
@@ -460,12 +556,12 @@ export default function App() {
     }
   }, [wardrobeItems]);
 
-  const handleRateOutfit = useCallback(async (description: string) => {
+  const handleRateOutfit = useCallback(async (description: string, venue: string, weather: string, preference: string, strict: boolean) => {
     setIsLoading(true);
     setError(null);
     setStyleRating(null);
     try {
-      const result = await rateOutfit(description, false);
+      const result = await rateOutfit(description, venue, weather, preference, strict);
       setStyleRating(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");
