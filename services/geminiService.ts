@@ -1,3 +1,4 @@
+const MODEL_NAME = 'gemini-2.0-flash';
 let ai: any;
 
 const getAPIKey = (): string => {
@@ -69,7 +70,7 @@ export const rateOutfit = async (description: string, venue: string, weather: st
       "explanation": "Your detailed critique here..."
     }`;
 
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
       contents: [{ parts: [{ text: prompt }] }]
     });
@@ -99,7 +100,7 @@ export const classifyImage = async (file: File): Promise<string> => {
     const textPart = {
       text: "Analyze this image of a clothing item. Provide a short, descriptive name for it (e.g., 'blue denim jacket', 'striped cotton t-shirt', 'black leather boots'). Respond with only the name.",
     };
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
       contents: [{ parts: [imagePart, textPart] }]
     });
@@ -124,7 +125,7 @@ export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> 
   try {
     const prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${wardrobeItems.join('\n- ')}\n\nRecommendation:`;
 
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
       contents: [{ parts: [{ text: prompt }] }]
     });
@@ -142,7 +143,7 @@ export const generateImage = async (prompt: string): Promise<string> => {
     await initializeAI();
   }
   try {
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
       contents: [{
         parts: [{

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { WardrobeItem, View } from './types';
 import { classifyImage, recommendOutfit, rateOutfit, type StyleRating } from './services/geminiService';
-import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon } from './components/icons';
+import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon } from './components/icons';
 
 const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void }> = ({ activeView, setActiveView, theme, toggleTheme }) => {
   const navItems = [
@@ -253,6 +253,7 @@ const AiOutfitRaterView: React.FC<{
   const [weather, setWeather] = useState('Mild');
   const [selectedPreference, setSelectedPreference] = useState('Minimalist');
   const [customPreference, setCustomPreference] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const venues = ['Professional', 'Casual Party', 'College', 'Date Night', 'Formal Event', 'Gym/Athletic'];
   const weathers = ['Hot/Sunny', 'Cold/Winter', 'Rainy', 'Mild/Spring', 'Humid'];
@@ -288,52 +289,65 @@ const AiOutfitRaterView: React.FC<{
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
-              <select
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
-              >
-                {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-300 ml-1">Weather Context</label>
-              <select
-                value={weather}
-                onChange={(e) => setWeather(e.target.value)}
-                className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
-              >
-                {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
-              </select>
-            </div>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center space-x-2 text-indigo-400 hover:text-indigo-300 font-bold text-sm transition-colors duration-200"
+            >
+              <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
+              <span>{showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}</span>
+            </button>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-300 ml-1">Style Preference</label>
-              <select
-                value={selectedPreference}
-                onChange={(e) => setSelectedPreference(e.target.value)}
-                className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
-              >
-                {preferences.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
+          <div className={`space-y-6 transition-all duration-500 overflow-hidden ${showAdvanced ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
+                <select
+                  value={venue}
+                  onChange={(e) => setVenue(e.target.value)}
+                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
+                >
+                  {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-300 ml-1">Weather Context</label>
+                <select
+                  value={weather}
+                  onChange={(e) => setWeather(e.target.value)}
+                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
+                >
+                  {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
+                </select>
+              </div>
             </div>
 
-            {selectedPreference === 'Other' && (
-              <div className="space-y-2 animate-fade-in">
-                <input
-                  type="text"
-                  value={customPreference}
-                  onChange={(e) => setCustomPreference(e.target.value)}
-                  placeholder="Describe your custom style preference..."
-                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium"
-                />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-300 ml-1">Style Preference</label>
+                <select
+                  value={selectedPreference}
+                  onChange={(e) => setSelectedPreference(e.target.value)}
+                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
+                >
+                  {preferences.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
               </div>
-            )}
+
+              {selectedPreference === 'Other' && (
+                <div className="space-y-2 animate-fade-in">
+                  <input
+                    type="text"
+                    value={customPreference}
+                    onChange={(e) => setCustomPreference(e.target.value)}
+                    placeholder="Describe your custom style preference..."
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <button
