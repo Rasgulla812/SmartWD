@@ -304,36 +304,45 @@ const AiOutfitRaterView: React.FC<{
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
-                <select
-                  value={venue}
-                  onChange={(e) => setVenue(e.target.value)}
-                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
-                >
-                  {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
-                </select>
+                <div className="relative">
+                  <select
+                    value={venue}
+                    onChange={(e) => setVenue(e.target.value)}
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
+                  >
+                    {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-300 ml-1">Weather Context</label>
-                <select
-                  value={weather}
-                  onChange={(e) => setWeather(e.target.value)}
-                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
-                >
-                  {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
-                </select>
+                <div className="relative">
+                  <select
+                    value={weather}
+                    onChange={(e) => setWeather(e.target.value)}
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
+                  >
+                    {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-300 ml-1">Style Preference</label>
-                <select
-                  value={selectedPreference}
-                  onChange={(e) => setSelectedPreference(e.target.value)}
-                  className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none"
-                >
-                  {preferences.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedPreference}
+                    onChange={(e) => setSelectedPreference(e.target.value)}
+                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
+                  >
+                    {preferences.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
               </div>
 
               {selectedPreference === 'Other' && (

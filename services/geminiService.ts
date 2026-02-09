@@ -1,4 +1,4 @@
-const MODEL_NAME = 'gemini-2.0-flash';
+const MODEL_NAME = 'gemini-3.0-flash';
 let ai: any;
 
 const getAPIKey = (): string => {
