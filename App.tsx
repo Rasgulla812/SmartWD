@@ -260,27 +260,17 @@ const ToggleSwitch: React.FC<{
 };
 
 const AiOutfitRaterView: React.FC<{
-  onRateOutfit: (description: string, venue: string, weather: string, preference: string, strict: boolean) => void;
+  onRateOutfit: (description: string, strict: boolean) => void;
   rating: StyleRating | null;
   isLoading: boolean;
 }> = ({ onRateOutfit, rating, isLoading }) => {
   const [description, setDescription] = useState('');
-  const [venue, setVenue] = useState('Professional');
-  const [weather, setWeather] = useState('Mild');
-  const [selectedPreference, setSelectedPreference] = useState('Minimalist');
-  const [customPreference, setCustomPreference] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [strict, setStrict] = useState(false);
-
-  const venues = ['Professional', 'Casual Party', 'College', 'Date Night', 'Formal Event', 'Gym/Athletic'];
-  const weathers = ['Hot/Sunny', 'Cold/Winter', 'Rainy', 'Mild/Spring', 'Humid'];
-  const preferences = ['Minimalist', 'Streetwear', 'Classic Professional', 'Vintage/Retro', 'Avant-garde', 'Bohemian', 'Other'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim()) {
-      const finalPreference = selectedPreference === 'Other' ? customPreference : selectedPreference;
-      onRateOutfit(description, venue, weather, finalPreference, strict);
+      onRateOutfit(description, strict);
     }
   };
 
@@ -306,74 +296,11 @@ const AiOutfitRaterView: React.FC<{
             />
           </div>
 
-          <ToggleSwitch
-            enabled={showAdvanced}
-            onChange={() => setShowAdvanced(!showAdvanced)}
-            label="Advanced Style Context"
-          />
-
-          <div className={`space-y-6 transition-all duration-500 overflow-hidden ${showAdvanced ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
-                <div className="relative">
-                  <select
-                    value={venue}
-                    onChange={(e) => setVenue(e.target.value)}
-                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
-                  >
-                    {venues.map(v => <option key={v} value={v} className="bg-slate-900">{v}</option>)}
-                  </select>
-                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-300 ml-1">Weather Context</label>
-                <div className="relative">
-                  <select
-                    value={weather}
-                    onChange={(e) => setWeather(e.target.value)}
-                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
-                  >
-                    {weathers.map(w => <option key={w} value={w} className="bg-slate-900">{w}</option>)}
-                  </select>
-                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-300 ml-1">Style Preference</label>
-                <div className="relative">
-                  <select
-                    value={selectedPreference}
-                    onChange={(e) => setSelectedPreference(e.target.value)}
-                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium appearance-none pr-10"
-                  >
-                    {preferences.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                  <ChevronDownIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                </div>
-              </div>
-
-              {selectedPreference === 'Other' && (
-                <div className="space-y-2 animate-fade-in">
-                  <input
-                    type="text"
-                    value={customPreference}
-                    onChange={(e) => setCustomPreference(e.target.value)}
-                    placeholder="Describe your custom style preference..."
-                    className="w-full p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl text-white focus:border-indigo-500 focus:outline-none font-medium"
-                  />
-                </div>
-              )}
-            </div>
-
+          <div className="pt-2">
             <ToggleSwitch
               enabled={strict}
               onChange={() => setStrict(!strict)}
-              label="Strict Savage Critique"
+              label="Savage Critique Mode"
             />
           </div>
 
@@ -440,13 +367,13 @@ const AiOutfitRaterView: React.FC<{
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-slate-400 group">
                   <div className="flex items-center space-x-2">
-                    <ThermometerIcon className="h-4 w-4 md:h-5 md:w-5 group-hover:text-sky-500 transition-colors" />
-                    <span className="text-xs md:text-sm font-bold">{weather}</span>
+                    <SparklesIcon className="h-4 w-4 md:h-5 md:w-5 group-hover:text-indigo-400 transition-colors" />
+                    <span className="text-xs md:text-sm font-bold">{strict ? 'Savage Mode' : 'Standard Mode'}</span>
                   </div>
                   <span className="hidden sm:block h-1 w-1 bg-slate-600 rounded-full"></span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs md:text-sm font-bold uppercase tracking-tighter opacity-50">Event</span>
-                    <span className="text-xs md:text-sm font-bold text-slate-300">{venue}</span>
+                    <span className="text-xs md:text-sm font-bold uppercase tracking-tighter opacity-50">Analysis Type</span>
+                    <span className="text-xs md:text-sm font-bold text-slate-300">Style Critique</span>
                   </div>
                 </div>
               </div>
@@ -556,12 +483,12 @@ export default function App() {
     }
   }, [wardrobeItems]);
 
-  const handleRateOutfit = useCallback(async (description: string, venue: string, weather: string, preference: string, strict: boolean) => {
+  const handleRateOutfit = useCallback(async (description: string, strict: boolean) => {
     setIsLoading(true);
     setError(null);
     setStyleRating(null);
     try {
-      const result = await rateOutfit(description, venue, weather, preference, strict);
+      const result = await rateOutfit(description, strict);
       setStyleRating(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");
