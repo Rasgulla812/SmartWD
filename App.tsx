@@ -243,8 +243,24 @@ const OutfitRecommenderView: React.FC<{
 };
 
 
+const ToggleSwitch: React.FC<{
+  enabled: boolean;
+  onChange: () => void;
+  label: string;
+}> = ({ enabled, onChange, label }) => {
+  return (
+    <div className="flex items-center justify-between p-4 bg-slate-900/40 border-2 border-white/5 rounded-2xl hover:border-indigo-500/50 transition-all duration-300">
+      <span className="text-sm font-bold text-slate-300 ml-1">{label}</span>
+      <label className="toggle-switch">
+        <input type="checkbox" checked={enabled} onChange={onChange} />
+        <span className="toggle-slider"></span>
+      </label>
+    </div>
+  );
+};
+
 const AiOutfitRaterView: React.FC<{
-  onRateOutfit: (description: string, venue: string, weather: string, preference: string) => void;
+  onRateOutfit: (description: string, venue: string, weather: string, preference: string, strict: boolean) => void;
   rating: StyleRating | null;
   isLoading: boolean;
 }> = ({ onRateOutfit, rating, isLoading }) => {
@@ -254,6 +270,7 @@ const AiOutfitRaterView: React.FC<{
   const [selectedPreference, setSelectedPreference] = useState('Minimalist');
   const [customPreference, setCustomPreference] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [strict, setStrict] = useState(false);
 
   const venues = ['Professional', 'Casual Party', 'College', 'Date Night', 'Formal Event', 'Gym/Athletic'];
   const weathers = ['Hot/Sunny', 'Cold/Winter', 'Rainy', 'Mild/Spring', 'Humid'];
@@ -263,7 +280,7 @@ const AiOutfitRaterView: React.FC<{
     e.preventDefault();
     if (description.trim()) {
       const finalPreference = selectedPreference === 'Other' ? customPreference : selectedPreference;
-      onRateOutfit(description, venue, weather, finalPreference);
+      onRateOutfit(description, venue, weather, finalPreference, strict);
     }
   };
 
@@ -289,18 +306,13 @@ const AiOutfitRaterView: React.FC<{
             />
           </div>
 
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center space-x-2 text-indigo-400 hover:text-indigo-300 font-bold text-sm transition-colors duration-200"
-            >
-              <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
-              <span>{showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}</span>
-            </button>
-          </div>
+          <ToggleSwitch
+            enabled={showAdvanced}
+            onChange={() => setShowAdvanced(!showAdvanced)}
+            label="Advanced Style Context"
+          />
 
-          <div className={`space-y-6 transition-all duration-500 overflow-hidden ${showAdvanced ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className={`space-y-6 transition-all duration-500 overflow-hidden ${showAdvanced ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-300 ml-1">Venue / Occasion</label>
@@ -357,6 +369,12 @@ const AiOutfitRaterView: React.FC<{
                 </div>
               )}
             </div>
+
+            <ToggleSwitch
+              enabled={strict}
+              onChange={() => setStrict(!strict)}
+              label="Strict Savage Critique"
+            />
           </div>
 
           <button
@@ -538,12 +556,12 @@ export default function App() {
     }
   }, [wardrobeItems]);
 
-  const handleRateOutfit = useCallback(async (description: string, venue: string, weather: string, preference: string) => {
+  const handleRateOutfit = useCallback(async (description: string, venue: string, weather: string, preference: string, strict: boolean) => {
     setIsLoading(true);
     setError(null);
     setStyleRating(null);
     try {
-      const result = await rateOutfit(description, venue, weather, preference);
+      const result = await rateOutfit(description, venue, weather, preference, strict);
       setStyleRating(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");

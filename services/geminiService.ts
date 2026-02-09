@@ -1,4 +1,4 @@
-const MODEL_NAME = 'gemini-3.0-flash';
+const MODEL_NAME = 'gemini-2.0-flash';
 let ai: any;
 
 const getAPIKey = (): string => {
@@ -51,7 +51,7 @@ export interface StyleRating {
   explanation: string;
 }
 
-export const rateOutfit = async (description: string, venue: string, weather: string, preference: string): Promise<StyleRating> => {
+export const rateOutfit = async (description: string, venue: string, weather: string, preference: string, strict: boolean = false): Promise<StyleRating> => {
   if (!ai) {
     await initializeAI();
   }
@@ -62,6 +62,7 @@ export const rateOutfit = async (description: string, venue: string, weather: st
     Venue: ${venue}
     Weather: ${weather}
     Style Preference: ${preference}
+    ${strict ? 'STRICT MODE: Be very critical and honest. Don\'t hold back on suggesting improvements even if the outfit is good.' : 'Be encouraging but professional.'}
     
     Provide a score between 1 and 10 and a detailed professional critique.
     Format your response as a JSON object like this:
