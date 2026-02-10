@@ -1,4 +1,4 @@
-const MODEL_NAME = 'gemini-2.0-flash';
+const MODEL_NAME = 'gemini-2.5-flash';
 let ai: any;
 
 const getAPIKey = (): string => {
@@ -51,10 +51,24 @@ export interface StyleRating {
   explanation: string;
 }
 
-export const rateOutfit = async (description: string, venue: string, weather: string, preference: string, strict: boolean = false): Promise<StyleRating> => {
-  if (!ai) {
-    await initializeAI();
+const handleAIError = (error: any, context: string) => {
+  console.error(`Error ${context}:`, error);
+  const message = error instanceof Error ? error.message : 'Unknown error';
+
+  if (message.includes('429') || message.toLowerCase().includes('quota')) {
+    throw new Error(`API Quota Reached: You've hit the Gemini free tier limit. Please wait a moment or check your Google AI Studio dashboard. Switching to a different model or enabling billing usually helps.`);
   }
+
+  throw new Error(`Failed to ${context}: ${message}`);
+};
+
+export interface StyleRating {
+  score: number;
+  explanation: string;
+}
+
+export const rateOutfit = async (description: string, venue: string, weather: string, preference: string, strict: boolean = false): Promise<StyleRating> => {
+  if (!ai) await initializeAI();
 
   try {
     const prompt = `Rate the following outfit based on the context:
@@ -79,7 +93,6 @@ export const rateOutfit = async (description: string, venue: string, weather: st
     const result = await response.response;
     const text = result.text();
 
-    // Extract JSON from the response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
@@ -87,15 +100,13 @@ export const rateOutfit = async (description: string, venue: string, weather: st
 
     throw new Error("Invalid response format from AI");
   } catch (error) {
-    console.error("Error rating outfit:", error);
-    throw new Error(`Failed to rate outfit: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return handleAIError(error, 'rate outfit');
   }
 };
 
 export const classifyImage = async (file: File): Promise<string> => {
-  if (!ai) {
-    await initializeAI();
-  }
+  if (!ai) await initializeAI();
+
   try {
     const imagePart = await fileToGenerativePart(file);
     const textPart = {
@@ -110,15 +121,13 @@ export const classifyImage = async (file: File): Promise<string> => {
     const text = result.text();
     return text.trim() || "Clothing item";
   } catch (error) {
-    console.error("Error classifying image:", error);
-    throw new Error(`Failed to classify the image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return handleAIError(error, 'classify image');
   }
 };
 
 export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> => {
-  if (!ai) {
-    await initializeAI();
-  }
+  if (!ai) await initializeAI();
+
   if (wardrobeItems.length === 0) {
     return "Your wardrobe is empty! Add some clothes to get an outfit recommendation.";
   }
@@ -134,15 +143,13 @@ export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> 
     const result = await response.response;
     return result.text() || "Unable to generate recommendation";
   } catch (error) {
-    console.error("Error recommending outfit:", error);
-    throw new Error(`Failed to generate recommendation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return handleAIError(error, 'generate recommendation');
   }
 };
 
 export const generateImage = async (prompt: string): Promise<string> => {
-  if (!ai) {
-    await initializeAI();
-  }
+  if (!ai) await initializeAI();
+
   try {
     const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
@@ -164,9 +171,8 @@ export const generateImage = async (prompt: string): Promise<string> => {
       }
     }
 
-    throw new Error("No image data in response");
+    throw new Error("No image data in response. Note: This model may not support direct image generation.");
   } catch (error) {
-    console.error("Error generating image:", error);
-    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return handleAIError(error, 'generate image');
   }
 };
