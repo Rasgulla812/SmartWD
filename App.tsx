@@ -181,7 +181,21 @@ const WardrobeView: React.FC<{
                 <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
               <div className="absolute inset-x-2 bottom-2 p-3 bg-white/90 backdrop-blur-md rounded-xl md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 border border-white/50">
-                <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate">{item.name}</h3>
+                <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate mb-0.5">{item.name}</h3>
+                {(item.color || item.fabric) && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {item.color && (
+                      <span className="text-[9px] font-black uppercase tracking-tighter bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
+                        {item.color}
+                      </span>
+                    )}
+                    {item.fabric && (
+                      <span className="text-[9px] font-black uppercase tracking-tighter bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
+                        {item.fabric}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -527,10 +541,12 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const name = await classifyImage(file);
+      const { name, color, fabric } = await classifyImage(file);
       const newItem: WardrobeItem = {
         id: new Date().toISOString(),
         name,
+        color,
+        fabric,
         imageUrl: URL.createObjectURL(file),
       };
       setWardrobeItems(prev => [newItem, ...prev]);
@@ -546,8 +562,7 @@ export default function App() {
     setError(null);
     setRecommendation(null);
     try {
-      const itemNames = wardrobeItems.map(item => item.name);
-      const result = await recommendOutfit(itemNames);
+      const result = await recommendOutfit(wardrobeItems);
       setRecommendation(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");

@@ -1,3 +1,4 @@
+import { WardrobeItem } from '../types';
 const MODEL_NAME = 'gemini-2.5-flash';
 let ai: any;
 
@@ -46,10 +47,7 @@ const fileToGenerativePart = async (file: File) => {
   };
 };
 
-export interface StyleRating {
-  score: number;
-  explanation: string;
-}
+
 
 const handleAIError = (error: any, context: string) => {
   console.error(`Error ${context}:`, error);
@@ -104,13 +102,13 @@ export const rateOutfit = async (description: string, venue: string, weather: st
   }
 };
 
-export const classifyImage = async (file: File): Promise<string> => {
+export const classifyImage = async (file: File): Promise<{ name: string; color: string; fabric: string }> => {
   if (!ai) await initializeAI();
 
   try {
     const imagePart = await fileToGenerativePart(file);
     const textPart = {
-      text: "Analyze this image of a clothing item. Provide a short, descriptive name for it (e.g., 'blue denim jacket', 'striped cotton t-shirt', 'black leather boots'). Respond with only the name.",
+      text: "Analyze this image of a clothing item. Identify the clothing type, its color, and its fabric material. Provide the response as a JSON object with exactly these keys: 'name' (a 2-3 word name like 'Slim Fit Chinos'), 'color' (the primary color), and 'fabric' (the material like 'Cotton', 'Denim', 'Wool'). Respond only with the JSON object.",
     };
     const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
@@ -119,13 +117,25 @@ export const classifyImage = async (file: File): Promise<string> => {
 
     const result = await response.response;
     const text = result.text();
-    return text.trim() || "Clothing item";
+
+    // Parse JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        name: parsed.name || "Clothing Item",
+        color: parsed.color || "Unknown Color",
+        fabric: parsed.fabric || "Unknown Fabric"
+      };
+    }
+
+    return { name: "Clothing item", color: "Unknown", fabric: "Unknown" };
   } catch (error) {
     return handleAIError(error, 'classify image');
   }
 };
 
-export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> => {
+export const recommendOutfit = async (wardrobeItems: WardrobeItem[]): Promise<string> => {
   if (!ai) await initializeAI();
 
   if (wardrobeItems.length === 0) {
@@ -133,7 +143,10 @@ export const recommendOutfit = async (wardrobeItems: string[]): Promise<string> 
   }
 
   try {
-    const prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${wardrobeItems.join('\n- ')}\n\nRecommendation:`;
+    const itemDescriptions = wardrobeItems.map(item =>
+      `${item.name}${item.color ? ` (Color: ${item.color})` : ''}${item.fabric ? ` (Fabric: ${item.fabric})` : ''}`
+    );
+    const prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${itemDescriptions.join('\n- ')}\n\nRecommendation:`;
 
     const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
