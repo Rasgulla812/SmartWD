@@ -5,6 +5,7 @@ export interface WardrobeItem {
   imageUrl: string;
   color?: string;
   fabric?: string;
+  texture?: string;
 }
 
 export type View = 'wardrobe' | 'recommender' | 'rater';

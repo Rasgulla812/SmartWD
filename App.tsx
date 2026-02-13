@@ -182,7 +182,7 @@ const WardrobeView: React.FC<{
               </div>
               <div className="absolute inset-x-2 bottom-2 p-3 bg-white/90 backdrop-blur-md rounded-xl md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 border border-white/50">
                 <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate mb-0.5">{item.name}</h3>
-                {(item.color || item.fabric) && (
+                {(item.color || item.fabric || item.texture) && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {item.color && (
                       <span className="text-[9px] font-black uppercase tracking-tighter bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
@@ -192,6 +192,11 @@ const WardrobeView: React.FC<{
                     {item.fabric && (
                       <span className="text-[9px] font-black uppercase tracking-tighter bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded">
                         {item.fabric}
+                      </span>
+                    )}
+                    {item.texture && (
+                      <span className="text-[9px] font-black uppercase tracking-tighter bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                        {item.texture}
                       </span>
                     )}
                   </div>
@@ -541,12 +546,13 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const { name, color, fabric } = await classifyImage(file);
+      const { name, color, fabric, texture } = await classifyImage(file);
       const newItem: WardrobeItem = {
         id: new Date().toISOString(),
         name,
         color,
         fabric,
+        texture,
         imageUrl: URL.createObjectURL(file),
       };
       setWardrobeItems(prev => [newItem, ...prev]);
