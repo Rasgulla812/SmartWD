@@ -87,7 +87,7 @@ const WardrobeView: React.FC<{
   onDeleteItem: (id: string) => void;
   isLoading: boolean;
 }> = ({ items, onImageUpload, onDeleteItem, isLoading }) => {
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,7 +181,7 @@ const WardrobeView: React.FC<{
             <div key={item.id} className="group relative overflow-hidden rounded-2xl md:rounded-3xl shadow-lg aspect-[4/5] md:aspect-square glass-card p-2 md:p-3 hover:translate-y-[-8px] transition-all duration-300">
               <div
                 className="w-full h-full overflow-hidden rounded-2xl cursor-pointer"
-                onClick={() => setPreviewImage(item.imageUrl)}
+                onClick={() => setSelectedItem(item)}
               >
                 <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
@@ -198,7 +198,7 @@ const WardrobeView: React.FC<{
                 <TrashIcon className="w-4 h-4" />
               </button>
 
-              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/95 backdrop-blur-xl rounded-xl transition-all duration-300 border border-white/50 shadow-lg pointer-events-none">
+              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/95 backdrop-blur-xl rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/50 shadow-lg pointer-events-none">
                 <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate mb-0.5">{item.name}</h3>
                 {(item.color || item.fabric || item.texture) && (
                   <div className="flex flex-wrap gap-1 mt-1">
@@ -234,26 +234,60 @@ const WardrobeView: React.FC<{
       )}
 
       {/* Image Preview Modal */}
-      {previewImage && (
+      {selectedItem && (
         <div
           className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-fade-in"
-          onClick={() => setPreviewImage(null)}
+          onClick={() => setSelectedItem(null)}
         >
           <button
-            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 border border-white/10"
-            onClick={() => setPreviewImage(null)}
+            className="absolute top-6 right-6 p-3 bg-white/20 hover:bg-white/30 text-white rounded-full transition-all duration-300 border border-white/10 z-[110]"
+            onClick={() => setSelectedItem(null)}
           >
             <XIcon className="w-6 h-6" />
           </button>
+
           <div
-            className="relative max-w-5xl w-full max-h-[85vh] md:max-h-[90vh] overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-white/10 shadow-2xl"
+            className="relative max-w-5xl w-full max-h-[85vh] md:max-h-[90vh] flex flex-col items-center justify-center"
             onClick={e => e.stopPropagation()}
           >
-            <img
-              src={previewImage}
-              alt="Wardrobe item preview"
-              className="w-full h-full object-contain bg-slate-900"
-            />
+            <div className="relative w-full h-full overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-white/10 shadow-2xl bg-slate-900 flex items-center justify-center">
+              <img
+                src={selectedItem.imageUrl}
+                alt={selectedItem.name}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+
+            {/* Expanded Item Details */}
+            <div className="mt-8 bg-white/10 backdrop-blur-xl p-6 md:p-10 rounded-[2rem] border border-white/10 w-full max-w-2xl text-center shadow-2xl animate-fade-up">
+              <h3 className="text-2xl md:text-4xl font-black text-white capitalize mb-4 tracking-tight">{selectedItem.name}</h3>
+              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+                {selectedItem.color && (
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-500">Color</span>
+                    <span className="px-5 py-2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold text-sm md:text-base">
+                      {selectedItem.color}
+                    </span>
+                  </div>
+                )}
+                {selectedItem.fabric && (
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-500">Fabric</span>
+                    <span className="px-5 py-2 rounded-full bg-slate-500/20 text-slate-300 border border-slate-500/30 font-bold text-sm md:text-base">
+                      {selectedItem.fabric}
+                    </span>
+                  </div>
+                )}
+                {selectedItem.texture && (
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-500">Texture</span>
+                    <span className="px-5 py-2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-sm md:text-base">
+                      {selectedItem.texture}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
