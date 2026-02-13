@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { WardrobeItem, View } from './types';
 import { classifyImage, recommendOutfit, rateOutfit, type StyleRating } from './services/geminiService';
-import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon } from './components/icons';
+import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon, TrashIcon, XIcon } from './components/icons';
 
 const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void }> = ({ activeView, setActiveView, theme, toggleTheme }) => {
   const navItems = [
@@ -84,8 +84,10 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
 const WardrobeView: React.FC<{
   items: WardrobeItem[];
   onImageUpload: (file: File) => void;
+  onDeleteItem: (id: string) => void;
   isLoading: boolean;
-}> = ({ items, onImageUpload, isLoading }) => {
+}> = ({ items, onImageUpload, onDeleteItem, isLoading }) => {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -177,10 +179,26 @@ const WardrobeView: React.FC<{
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
           {items.map((item) => (
             <div key={item.id} className="group relative overflow-hidden rounded-2xl md:rounded-3xl shadow-lg aspect-[4/5] md:aspect-square glass-card p-2 md:p-3 hover:translate-y-[-8px] transition-all duration-300">
-              <div className="w-full h-full overflow-hidden rounded-2xl">
+              <div
+                className="w-full h-full overflow-hidden rounded-2xl cursor-pointer"
+                onClick={() => setPreviewImage(item.imageUrl)}
+              >
                 <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
-              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/95 backdrop-blur-xl rounded-xl transition-all duration-300 border border-white/50 shadow-lg">
+
+              {/* Delete Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteItem(item.id);
+                }}
+                className="absolute top-4 right-4 p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg backdrop-blur-sm z-10"
+                title="Remove from wardrobe"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+
+              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/95 backdrop-blur-xl rounded-xl transition-all duration-300 border border-white/50 shadow-lg pointer-events-none">
                 <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate mb-0.5">{item.name}</h3>
                 {(item.color || item.fabric || item.texture) && (
                   <div className="flex flex-wrap gap-1 mt-1">
@@ -212,6 +230,31 @@ const WardrobeView: React.FC<{
           </div>
           <h3 className="text-xl md:text-2xl font-bold text-white">Your Wardrobe is Empty</h3>
           <p className="text-slate-400 mt-2 text-sm md:text-base font-medium px-4">The studio is ready. Add your first item to begin.</p>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-300 border border-white/10"
+            onClick={() => setPreviewImage(null)}
+          >
+            <XIcon className="w-6 h-6" />
+          </button>
+          <div
+            className="relative max-w-5xl w-full max-h-[85vh] md:max-h-[90vh] overflow-hidden rounded-[2rem] md:rounded-[3rem] border border-white/10 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <img
+              src={previewImage}
+              alt="Wardrobe item preview"
+              className="w-full h-full object-contain bg-slate-900"
+            />
+          </div>
         </div>
       )}
     </div>
@@ -609,7 +652,7 @@ export default function App() {
           )}
 
           <div className="animate-fade-in delay-200">
-            {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} isLoading={isLoading} />}
+            {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} onDeleteItem={id => setWardrobeItems(prev => prev.filter(i => i.id !== id))} isLoading={isLoading} />}
             {activeView === 'recommender' && <OutfitRecommenderView wardrobeItems={wardrobeItems} onGetRecommendation={handleGetRecommendation} recommendation={recommendation} isLoading={isLoading} />}
             {activeView === 'rater' && <AiOutfitRaterView onRateOutfit={handleRateOutfit} rating={styleRating} isLoading={isLoading} />}
           </div>
