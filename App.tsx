@@ -180,7 +180,7 @@ const WardrobeView: React.FC<{
               <div className="w-full h-full overflow-hidden rounded-2xl">
                 <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
-              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/90 backdrop-blur-md rounded-xl md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 border border-white/50">
+              <div className="absolute inset-x-2 bottom-2 p-3 bg-white/95 backdrop-blur-xl rounded-xl transition-all duration-300 border border-white/50 shadow-lg">
                 <h3 className="text-slate-900 font-bold capitalize text-xs md:text-sm truncate mb-0.5">{item.name}</h3>
                 {(item.color || item.fabric || item.texture) && (
                   <div className="flex flex-wrap gap-1 mt-1">

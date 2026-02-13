@@ -108,29 +108,47 @@ export const classifyImage = async (file: File): Promise<{ name: string; color: 
   try {
     const imagePart = await fileToGenerativePart(file);
     const textPart = {
-      text: "Analyze this image of a clothing item with high precision. Identify the clothing type, its exact color, the fabric material, and the visual texture. For 'fabric', identify the material (e.g., '100% Cotton', 'Denim', 'Polyester Blend', 'Leather', 'Wool'). For 'texture', describe how the surface looks and would feel (e.g., 'Smooth', 'Ribbed', 'Knit', 'Distressed', 'Glossy', 'Matte', 'Woven'). Provide the response as a JSON object with exactly these keys: 'name', 'color', 'fabric', and 'texture'. Respond only with the JSON object.",
+      text: `Identify the attributes of this clothing item with absolute precision. 
+      You must focus on the subtle visual cues to determine the exact material and surface texture.
+      
+      Requirements for fields:
+      - 'name': Specific fashion name (e.g., 'Oversized Cuban Collar Shirt')
+      - 'color': The dominant color with shades (e.g., 'Deep Forest Green')
+      - 'fabric': The specific material composition (e.g., 'Heavyweight Cotton Twill', 'Merino Wool', 'Synthetic Mesh', 'Nylon', 'Linen Blend'). NEVER say just 'Fabric' or 'Unknown'.
+      - 'texture': Describe the surface feel and look (e.g., 'Waffle Knit', 'Seersucker', 'Brushed/Fuzzy', 'Matte/Flat', 'Mercerized/Glossy', 'Herringbone Weave'). NEVER say 'Unknown'.
+      
+      Respond STRICTLY in JSON format.`,
     };
-    const model = ai.getGenerativeModel({ model: MODEL_NAME });
+
+    const model = ai.getGenerativeModel({
+      model: MODEL_NAME,
+      systemInstruction: "You are a world-class textile and fashion expert. You can identify any fabric or texture just by looking at a photo. You only output pure JSON."
+    });
+
     const response = await model.generateContent({
-      contents: [{ parts: [imagePart, textPart] }]
+      contents: [{ parts: [imagePart, textPart] }],
+      generationConfig: {
+        temperature: 0.1, // Low temperature for higher accuracy/consistency
+        responseMimeType: "application/json",
+      }
     });
 
     const result = await response.response;
-    const text = result.text();
+    let text = result.text();
+    console.log('Gemini raw response:', text);
 
-    // Parse JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        name: parsed.name || "Clothing Item",
-        color: parsed.color || "Unknown Color",
-        fabric: parsed.fabric || "Unknown Fabric",
-        texture: parsed.texture || "Unknown Texture"
-      };
+    // Some versions of the SDK/Model might still return markdown blocks even in JSON mode
+    if (text.includes('```')) {
+      text = text.replace(/```json\n?|```/g, '').trim();
     }
 
-    return { name: "Clothing item", color: "Unknown", fabric: "Unknown", texture: "Unknown" };
+    const parsed = JSON.parse(text);
+    return {
+      name: parsed.name || parsed.item_name || "Clothing Item",
+      color: parsed.color || "Specific Color",
+      fabric: parsed.fabric || parsed.material || "Specific Fabric",
+      texture: parsed.texture || "Specific Texture"
+    };
   } catch (error) {
     return handleAIError(error, 'classify image');
   }
