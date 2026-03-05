@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import type { WardrobeItem, View } from './types';
-import { classifyImage, recommendOutfit, rateOutfit, type StyleRating } from './services/geminiService';
+import { classifyImage, recommendOutfit, rateOutfit, generateAllPossibleOutfits, type StyleRating, type MultiOutfitResult } from './services/geminiService';
 import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon, TrashIcon, XIcon } from './components/icons';
 
 const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void }> = ({ activeView, setActiveView, theme, toggleTheme }) => {
@@ -299,12 +299,15 @@ const WardrobeView: React.FC<{
 const OutfitRecommenderView: React.FC<{
   wardrobeItems: WardrobeItem[];
   onGetRecommendation: (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => void;
+  onGetAllOutfits: () => void;
   recommendation: string | null;
+  multiOutfits: MultiOutfitResult[];
   isLoading: boolean;
   rethinkCount: number;
   onRethink: (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => void;
-}> = ({ wardrobeItems, onGetRecommendation, recommendation, isLoading, rethinkCount, onRethink }) => {
+}> = ({ wardrobeItems, onGetRecommendation, onGetAllOutfits, recommendation, multiOutfits, isLoading, rethinkCount, onRethink }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedMulti, setSelectedMulti] = useState<MultiOutfitResult | null>(null);
   const [occasion, setOccasion] = useState('');
   const [weather, setWeather] = useState('');
   const [mood, setMood] = useState('');
@@ -323,22 +326,32 @@ const OutfitRecommenderView: React.FC<{
         <SparklesIcon className="mx-auto h-16 w-16 bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-3 rounded-full shadow-[0_0_30px_rgba(99,102,241,0.3)]" />
         <h2 className="mt-6 text-2xl font-black tracking-tight sm:text-5xl text-white px-2">Outfit Recommendation</h2>
         <p className="mt-3 text-sm md:text-xl text-slate-300 font-medium leading-relaxed px-4 opacity-80">Let our AI stylist create the perfect outfit from your wardrobe.</p>
-        <button
-          onClick={handleRecommendationClick}
-          disabled={isLoading || wardrobeItems.length === 0}
-          className="mt-8 inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-transparent text-base md:text-lg font-black rounded-full text-white bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)] disabled:bg-slate-800 disabled:cursor-not-allowed transition-all duration-300 w-full sm:w-auto"
-        >
-          {isLoading ? (
-            <>
-              <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-              Thinking...
-            </>
-          ) : rethinkCount > 0 ? (
-            "Let AI Rethink"
-          ) : (
-            "Generate My Outfit"
-          )}
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+          <button
+            onClick={handleRecommendationClick}
+            disabled={isLoading || wardrobeItems.length === 0}
+            className="inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-transparent text-base md:text-lg font-black rounded-full text-white bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)] disabled:bg-slate-800 disabled:cursor-not-allowed transition-all duration-300 w-full sm:w-auto"
+          >
+            {isLoading ? (
+              <>
+                <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                Thinking...
+              </>
+            ) : rethinkCount > 0 ? (
+              "Let AI Rethink"
+            ) : (
+              "Generate My Outfit"
+            )}
+          </button>
+
+          <button
+            onClick={onGetAllOutfits}
+            disabled={isLoading || wardrobeItems.length === 0}
+            className="inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-white/10 text-base md:text-lg font-black rounded-full text-white bg-white/5 hover:bg-white/10 backdrop-blur-lg disabled:bg-slate-800 disabled:cursor-not-allowed transition-all duration-300 w-full sm:w-auto"
+          >
+            All Possible Looks
+          </button>
+        </div>
 
         {rethinkCount >= 3 && (
           <div className="mt-6 flex items-center justify-center space-x-2 animate-fade-in">
@@ -403,6 +416,53 @@ const OutfitRecommenderView: React.FC<{
         {wardrobeItems.length === 0 && <p className="text-sm mt-4 text-amber-600">Add items to your wardrobe to get a recommendation.</p>}
       </div>
 
+      {multiOutfits.length > 0 && (
+        <div className="mt-12 max-w-5xl mx-auto space-y-8 animate-fade-in text-left">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-1 bg-purple-500 rounded-full"></div>
+            <h3 className="text-2xl font-black text-white">Your Full Lookbook</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {multiOutfits.map((outfit, index) => (
+              <div
+                key={index}
+                className="glass-card p-6 rounded-[2rem] border border-white/10 hover:border-indigo-500 cursor-pointer group"
+                onClick={() => setSelectedMulti(outfit)}
+              >
+                <h4 className="text-lg font-black text-indigo-400 mb-2 group-hover:text-indigo-300 transition-colors">{outfit.title}</h4>
+                <p className="text-slate-400 line-clamp-3 text-sm font-medium">{outfit.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Outfit Detail Modal */}
+      {selectedMulti && (
+        <div
+          className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setSelectedMulti(null)}
+        >
+          <div
+            className="max-w-2xl w-full glass-card p-8 md:p-12 rounded-[2.5rem] border border-white/10 shadow-3xl animate-fade-up relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-6 right-6 p-2 text-slate-500 hover:text-white transition-colors"
+              onClick={() => setSelectedMulti(null)}
+            >
+              <XIcon className="w-6 h-6" />
+            </button>
+            <h3 className="text-3xl font-black text-white mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 text-transparent bg-clip-text inline-block">
+              {selectedMulti.title}
+            </h3>
+            <p className="text-slate-200 text-lg leading-relaxed font-medium whitespace-pre-wrap">
+              {selectedMulti.description}
+            </p>
+          </div>
+        </div>
+      )}
+
       {recommendation && (
         <div className="mt-8 md:mt-12 max-w-3xl mx-auto">
           <div className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-10 text-left shadow-2xl animate-fade-in border border-white/20">
@@ -414,20 +474,23 @@ const OutfitRecommenderView: React.FC<{
             </div>
             <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-base md:text-lg">{recommendation}</p>
 
-            <button
-              onClick={() => {
-                if (rethinkCount >= 3 && showAdvanced) {
-                  onRethink({ occasion, weather, mood, style });
-                } else {
-                  onRethink();
-                }
-              }}
-              disabled={isLoading}
-              className="mt-8 flex items-center space-x-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
-            >
-              <WandIcon className="w-5 h-5 text-indigo-400" />
-              <span>I don't like this combination</span>
-            </button>
+            <div className="mt-8 pt-8 border-t border-white/5">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Not feeling it? Let the AI pivot.</p>
+              <button
+                onClick={() => {
+                  if (rethinkCount >= 3 && showAdvanced) {
+                    onRethink({ occasion, weather, mood, style });
+                  } else {
+                    onRethink();
+                  }
+                }}
+                disabled={isLoading}
+                className="flex items-center space-x-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 shadow-[0_5px_15px_rgba(99,102,241,0.3)]"
+              >
+                <WandIcon className="w-5 h-5 text-indigo-200" />
+                <span>Make a Different Combination</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -692,6 +755,8 @@ export default function App() {
   const [activeView, setActiveView] = useState<View>('wardrobe');
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [multiOutfits, setMultiOutfits] = useState<MultiOutfitResult[]>([]);
+  const [recentRecommendations, setRecentRecommendations] = useState<string[]>([]);
   const [styleRating, setStyleRating] = useState<StyleRating | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rethinkCount, setRethinkCount] = useState(0);
@@ -743,8 +808,26 @@ export default function App() {
     setError(null);
     setRecommendation(null);
     try {
-      const result = await recommendOutfit(wardrobeItems, context);
+      const result = await recommendOutfit(wardrobeItems, context, recentRecommendations);
       setRecommendation(result);
+      // Track valid unique recommendations for history
+      if (result && !recentRecommendations.includes(result)) {
+        setRecentRecommendations(prev => [...prev.slice(-4), result]);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [wardrobeItems, recentRecommendations]);
+
+  const handleGetAllPossibleOutfits = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setMultiOutfits([]);
+    try {
+      const result = await generateAllPossibleOutfits(wardrobeItems);
+      setMultiOutfits(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");
     } finally {
@@ -794,7 +877,9 @@ export default function App() {
               <OutfitRecommenderView
                 wardrobeItems={wardrobeItems}
                 onGetRecommendation={handleGetRecommendation}
+                onGetAllOutfits={handleGetAllPossibleOutfits}
                 recommendation={recommendation}
+                multiOutfits={multiOutfits}
                 isLoading={isLoading}
                 rethinkCount={rethinkCount}
                 onRethink={handleRethink}

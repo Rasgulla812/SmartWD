@@ -156,7 +156,8 @@ export const classifyImage = async (file: File): Promise<{ name: string; color: 
 
 export const recommendOutfit = async (
   wardrobeItems: WardrobeItem[],
-  context?: { occasion?: string; weather?: string; mood?: string; style?: string }
+  context?: { occasion?: string; weather?: string; mood?: string; style?: string },
+  recentRecommendations?: string[]
 ): Promise<string> => {
   if (!ai) await initializeAI();
 
@@ -169,10 +170,26 @@ export const recommendOutfit = async (
       `${item.name}${item.color ? ` (Color: ${item.color})` : ''}${item.fabric ? ` (Fabric: ${item.fabric})` : ''}${item.texture ? ` (Texture: ${item.texture})` : ''}`
     );
 
-    let prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${itemDescriptions.join('\n- ')}\n\n`;
+    let prompt = `You are a professional fashion stylist. Below is a list of ALL available clothes in a user's wardrobe. 
+    Your task is to create a STYLISH and COHERENT outfit recommendation.
+    
+    IMPORTANT RULES:
+    1. EXPLOIT THE FULL WARDROBE: Don't just pick the first few items. Rotate through different items. If there are multiple similar items (like two different jeans), make sure to suggest the one that hasn't been featured recently.
+    2. BE CREATIVE: Mix and match items in interesting ways.
+    3. PROVIDE A CLEAR DESCRIPTION: Name the specific items and explain why they work together.
+
+    Available Wardrobe items:
+    - ${itemDescriptions.join('\n    - ')}\n\n`;
+
+    if (recentRecommendations && recentRecommendations.length > 0) {
+      prompt += `CRITICAL: The user did NOT like the previous recommendations. DO NOT SUGGEST ANYTHING SIMILAR TO THESE:
+      ${recentRecommendations.slice(-3).join('\n---\n')}
+      
+      You MUST provide a significantly DIFFERENT combination this time using other available items.\n\n`;
+    }
 
     if (context) {
-      prompt += "Please consider the following preferences:\n";
+      prompt += "Please consider the following specific preferences:\n";
       if (context.occasion) prompt += `- Occasion: ${context.occasion}\n`;
       if (context.weather) prompt += `- Weather: ${context.weather}\n`;
       if (context.mood) prompt += `- Mood: ${context.mood}\n`;
@@ -180,7 +197,7 @@ export const recommendOutfit = async (
       prompt += "\n";
     }
 
-    prompt += "Recommendation:";
+    prompt += "Provide your recommendation now:";
 
     const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({
@@ -191,6 +208,49 @@ export const recommendOutfit = async (
     return result.text() || "Unable to generate recommendation";
   } catch (error) {
     return handleAIError(error, 'generate recommendation');
+  }
+};
+
+export interface MultiOutfitResult {
+  title: string;
+  description: string;
+}
+
+export const generateAllPossibleOutfits = async (wardrobeItems: WardrobeItem[]): Promise<MultiOutfitResult[]> => {
+  if (!ai) await initializeAI();
+
+  if (wardrobeItems.length === 0) {
+    throw new Error("Your wardrobe is empty!");
+  }
+
+  try {
+    const itemDescriptions = wardrobeItems.map(item =>
+      `${item.name}${item.color ? ` (Color: ${item.color})` : ''}${item.fabric ? ` (Fabric: ${item.fabric})` : ''}${item.texture ? ` (Texture: ${item.texture})` : ''}`
+    );
+
+    const prompt = `You are a creative fashion stylist. Here is a list of ALL available clothes in a user's wardrobe:
+    - ${itemDescriptions.join('\n    - ')}
+
+    Your task is to generate 5-8 UNIQUE and DIVERSE outfit combinations using DIFFERENT pieces from the wardrobe. 
+    Make sure to include combinations for different vibes (e.g., casual, smart, edgy, cozy).
+    Use as many items from the wardrobe as possible across all combinations.
+
+    Format your response STRICTLY as a JSON array of objects, where each object has "title" (short vibe name) and "description" (detailed outfit description).
+    Example: [{"title": "Casual Minimalist", "description": "Combining the white tee with raw denim..."}, ...]`;
+
+    const model = ai.getGenerativeModel({
+      model: MODEL_NAME,
+      generationConfig: { responseMimeType: "application/json" }
+    });
+    const response = await model.generateContent({
+      contents: [{ parts: [{ text: prompt }] }]
+    });
+
+    const result = await response.response;
+    const text = result.text();
+    return JSON.parse(text);
+  } catch (error) {
+    return handleAIError(error, 'generate all outfits');
   }
 };
 
