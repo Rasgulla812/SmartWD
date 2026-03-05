@@ -298,10 +298,25 @@ const WardrobeView: React.FC<{
 
 const OutfitRecommenderView: React.FC<{
   wardrobeItems: WardrobeItem[];
-  onGetRecommendation: () => void;
+  onGetRecommendation: (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => void;
   recommendation: string | null;
   isLoading: boolean;
-}> = ({ wardrobeItems, onGetRecommendation, recommendation, isLoading }) => {
+  rethinkCount: number;
+  onRethink: (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => void;
+}> = ({ wardrobeItems, onGetRecommendation, recommendation, isLoading, rethinkCount, onRethink }) => {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [occasion, setOccasion] = useState('');
+  const [weather, setWeather] = useState('');
+  const [mood, setMood] = useState('');
+  const [style, setStyle] = useState('');
+
+  const handleRecommendationClick = () => {
+    if (rethinkCount >= 3 && showAdvanced) {
+      onGetRecommendation({ occasion, weather, mood, style });
+    } else {
+      onGetRecommendation();
+    }
+  };
   return (
     <div className="text-center">
       <div className="max-w-2xl mx-auto">
@@ -309,7 +324,7 @@ const OutfitRecommenderView: React.FC<{
         <h2 className="mt-6 text-2xl font-black tracking-tight sm:text-5xl text-white px-2">Outfit Recommendation</h2>
         <p className="mt-3 text-sm md:text-xl text-slate-300 font-medium leading-relaxed px-4 opacity-80">Let our AI stylist create the perfect outfit from your wardrobe.</p>
         <button
-          onClick={onGetRecommendation}
+          onClick={handleRecommendationClick}
           disabled={isLoading || wardrobeItems.length === 0}
           className="mt-8 inline-flex items-center justify-center px-8 md:px-10 py-3.5 md:py-4 border border-transparent text-base md:text-lg font-black rounded-full text-white bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)] disabled:bg-slate-800 disabled:cursor-not-allowed transition-all duration-300 w-full sm:w-auto"
         >
@@ -318,20 +333,102 @@ const OutfitRecommenderView: React.FC<{
               <LoaderIcon className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
               Thinking...
             </>
+          ) : rethinkCount > 0 ? (
+            "Let AI Rethink"
           ) : (
             "Generate My Outfit"
           )}
         </button>
+
+        {rethinkCount >= 3 && (
+          <div className="mt-6 flex items-center justify-center space-x-2 animate-fade-in">
+            <input
+              type="checkbox"
+              id="show-advanced"
+              checked={showAdvanced}
+              onChange={(e) => setShowAdvanced(e.target.checked)}
+              className="w-5 h-5 rounded border-white/20 bg-slate-950/50 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900"
+            />
+            <label htmlFor="show-advanced" className="text-sm font-bold text-slate-300 cursor-pointer">
+              Fill details (Occasion, Weather, Mood, Style)
+            </label>
+          </div>
+        )}
+
+        {rethinkCount >= 3 && showAdvanced && (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-up">
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Occasion</label>
+              <input
+                type="text"
+                value={occasion}
+                onChange={(e) => setOccasion(e.target.value)}
+                placeholder="e.g. Wedding, Gym, Office"
+                className="w-full p-3 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Weather</label>
+              <input
+                type="text"
+                value={weather}
+                onChange={(e) => setWeather(e.target.value)}
+                placeholder="e.g. Rainy, Cold, Sunny"
+                className="w-full p-3 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Mood</label>
+              <input
+                type="text"
+                value={mood}
+                onChange={(e) => setMood(e.target.value)}
+                placeholder="e.g. Energetic, Chill, Formal"
+                className="w-full p-3 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Preferred Style</label>
+              <input
+                type="text"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                placeholder="e.g. Streetwear, Minimalist"
+                className="w-full p-3 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+              />
+            </div>
+          </div>
+        )}
+
         {wardrobeItems.length === 0 && <p className="text-sm mt-4 text-amber-600">Add items to your wardrobe to get a recommendation.</p>}
       </div>
 
       {recommendation && (
-        <div className="mt-8 md:mt-12 max-w-3xl mx-auto glass-card rounded-2xl md:rounded-3xl p-6 md:p-10 text-left shadow-2xl animate-fade-in border border-white/20">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-8 h-1 bg-indigo-500 rounded-full"></div>
-            <h3 className="text-xl font-bold text-white">Stylist Recommendation</h3>
+        <div className="mt-8 md:mt-12 max-w-3xl mx-auto">
+          <div className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-10 text-left shadow-2xl animate-fade-in border border-white/20">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-1 bg-indigo-500 rounded-full"></div>
+                <h3 className="text-xl font-bold text-white">Stylist Recommendation</h3>
+              </div>
+            </div>
+            <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-base md:text-lg">{recommendation}</p>
+
+            <button
+              onClick={() => {
+                if (rethinkCount >= 3 && showAdvanced) {
+                  onRethink({ occasion, weather, mood, style });
+                } else {
+                  onRethink();
+                }
+              }}
+              disabled={isLoading}
+              className="mt-8 flex items-center space-x-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
+            >
+              <WandIcon className="w-5 h-5 text-indigo-400" />
+              <span>I don't like this combination</span>
+            </button>
           </div>
-          <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-base md:text-lg">{recommendation}</p>
         </div>
       )}
     </div>
@@ -597,6 +694,7 @@ export default function App() {
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [styleRating, setStyleRating] = useState<StyleRating | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [rethinkCount, setRethinkCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -640,12 +738,12 @@ export default function App() {
     }
   }, []);
 
-  const handleGetRecommendation = useCallback(async () => {
+  const handleGetRecommendation = useCallback(async (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => {
     setIsLoading(true);
     setError(null);
     setRecommendation(null);
     try {
-      const result = await recommendOutfit(wardrobeItems);
+      const result = await recommendOutfit(wardrobeItems, context);
       setRecommendation(result);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An unknown error occurred.");
@@ -653,6 +751,11 @@ export default function App() {
       setIsLoading(false);
     }
   }, [wardrobeItems]);
+
+  const handleRethink = useCallback((context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => {
+    setRethinkCount(prev => prev + 1);
+    handleGetRecommendation(context);
+  }, [handleGetRecommendation]);
 
   const handleRateOutfit = useCallback(async (description: string, venue: string, weather: string, preference: string, strict: boolean) => {
     setIsLoading(true);
@@ -687,7 +790,16 @@ export default function App() {
 
           <div className="animate-fade-in delay-200">
             {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} onDeleteItem={id => setWardrobeItems(prev => prev.filter(i => i.id !== id))} isLoading={isLoading} />}
-            {activeView === 'recommender' && <OutfitRecommenderView wardrobeItems={wardrobeItems} onGetRecommendation={handleGetRecommendation} recommendation={recommendation} isLoading={isLoading} />}
+            {activeView === 'recommender' && (
+              <OutfitRecommenderView
+                wardrobeItems={wardrobeItems}
+                onGetRecommendation={handleGetRecommendation}
+                recommendation={recommendation}
+                isLoading={isLoading}
+                rethinkCount={rethinkCount}
+                onRethink={handleRethink}
+              />
+            )}
             {activeView === 'rater' && <AiOutfitRaterView onRateOutfit={handleRateOutfit} rating={styleRating} isLoading={isLoading} />}
           </div>
         </main>

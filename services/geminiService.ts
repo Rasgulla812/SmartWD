@@ -154,7 +154,10 @@ export const classifyImage = async (file: File): Promise<{ name: string; color: 
   }
 };
 
-export const recommendOutfit = async (wardrobeItems: WardrobeItem[]): Promise<string> => {
+export const recommendOutfit = async (
+  wardrobeItems: WardrobeItem[],
+  context?: { occasion?: string; weather?: string; mood?: string; style?: string }
+): Promise<string> => {
   if (!ai) await initializeAI();
 
   if (wardrobeItems.length === 0) {
@@ -165,7 +168,19 @@ export const recommendOutfit = async (wardrobeItems: WardrobeItem[]): Promise<st
     const itemDescriptions = wardrobeItems.map(item =>
       `${item.name}${item.color ? ` (Color: ${item.color})` : ''}${item.fabric ? ` (Fabric: ${item.fabric})` : ''}${item.texture ? ` (Texture: ${item.texture})` : ''}`
     );
-    const prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${itemDescriptions.join('\n- ')}\n\nRecommendation:`;
+
+    let prompt = `From the following list of clothes in a wardrobe, recommend a stylish and coherent outfit for today. Provide a brief description of the outfit and why it works well together.\n\nWardrobe items:\n- ${itemDescriptions.join('\n- ')}\n\n`;
+
+    if (context) {
+      prompt += "Please consider the following preferences:\n";
+      if (context.occasion) prompt += `- Occasion: ${context.occasion}\n`;
+      if (context.weather) prompt += `- Weather: ${context.weather}\n`;
+      if (context.mood) prompt += `- Mood: ${context.mood}\n`;
+      if (context.style) prompt += `- Style Preference: ${context.style}\n`;
+      prompt += "\n";
+    }
+
+    prompt += "Recommendation:";
 
     const model = ai.getGenerativeModel({ model: MODEL_NAME });
     const response = await model.generateContent({

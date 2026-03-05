@@ -346,6 +346,36 @@ html {
     animation: shake 0.4s ease-in-out;
 }
 
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-fade-up {
+    animation: fadeUp 0.8s ease-out forwards;
+}
+
 /* Fix for existing hardcoded colors in App.tsx */
 .text-white {
     color: var(--text-primary) !important;
