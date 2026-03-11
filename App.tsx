@@ -83,70 +83,46 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
 
 const MarkdownText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
   if (!text) return null;
-  const lines = text.split('\n');
-
+  
+  // Split by newlines and filter out truly empty lines
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  
   return (
-    <div className={`space-y-2 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {lines.map((line, idx) => {
-        const trimmedLine = line.trim();
-        if (trimmedLine === '') return <div key={idx} className="h-2" />;
-
-        // Handle Headers (### Title)
-        const headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
-        if (headerMatch) {
-          const level = headerMatch[1].length;
-          const content = headerMatch[2];
-          const fontSize = level === 1 ? 'text-2xl' : level === 2 ? 'text-xl' : 'text-lg';
-          return (
-            <div key={idx} className={`${fontSize} font-black text-white mt-4 mb-2 tracking-tight`}>
-              {content}
-            </div>
-          );
-        }
-
-        // Handle list items starting with * or - or digits
-        const listMatch = line.match(/^(\s*)([*+-]|\d+\.)\s+(.*)$/);
-
-        let content = line;
-        let isListItem = false;
-        let paddingLeft = "";
-
-        if (listMatch) {
-          isListItem = true;
-          content = listMatch[3];
-          paddingLeft = listMatch[1].length > 0 ? "ml-6" : "ml-1";
-        }
-
-        // Parse bold **text** or __text__
-        const parts = content.split(/(\*\*.*?\*\*|__.*?__)/g);
-        const parsedContent = parts.map((part, i) => {
-          if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('__') && part.endsWith('__'))) {
-            const innerText = part.slice(2, -2);
-            return (
-              <strong
-                key={i}
-                className="font-black text-white"
-                style={{ fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.1)' }}
-              >
-                {innerText}
-              </strong>
-            );
-          }
-          return part;
-        });
-
-        if (isListItem) {
-          return (
-            <div key={idx} className={`flex items-start gap-3 py-1 ${paddingLeft}`}>
-              <span className="mt-2 shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]"></span>
-              <span className="flex-1 leading-relaxed">{parsedContent}</span>
-            </div>
-          );
-        }
-
+        // Standardize: Remove any leading markdown markers to replace with our custom pointers
+        const cleanedContent = line.replace(/^[*+-]\s+/, '').replace(/^\d+\.\s+/, '').trim();
+        
+        // Simple and robust bold detection
+        const parts = cleanedContent.split(/(\*\*[^*]+\*\*)/g);
+        
         return (
-          <div key={idx} className="leading-relaxed">
-            {parsedContent}
+          <div key={idx} className="flex items-start gap-3 group">
+            {/* High-visibility Stylist Pointer */}
+            <div className="mt-2.5 shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)] group-hover:scale-125 transition-transform duration-300" />
+            
+            <div className="flex-1 leading-relaxed text-slate-300 font-medium">
+              {parts.map((part, i) => {
+                // If the part matches our bold pattern
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  const boldText = part.substring(2, part.length - 2);
+                  return (
+                    <strong 
+                      key={i} 
+                      className="font-black text-white" 
+                      style={{ 
+                        fontWeight: 900, 
+                        color: 'inherit', // Inherits from parent or let CSS classes handle it
+                        textShadow: '0 0 1px rgba(255,255,255,0.2)' 
+                      }}
+                    >
+                      {boldText}
+                    </strong>
+                  );
+                }
+                return part;
+              })}
+            </div>
           </div>
         );
       })}
