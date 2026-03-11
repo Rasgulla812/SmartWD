@@ -81,6 +81,52 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
   );
 };
 
+const MarkdownText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
+  const lines = text.split('\n');
+
+  return (
+    <div className={`space-y-1 ${className}`}>
+      {lines.map((line, idx) => {
+        // Handle list items starting with * or - followed by space
+        const listMatch = line.trim().match(/^[*+-]\s+(.*)$/);
+
+        let content = line;
+        let isListItem = false;
+
+        if (listMatch) {
+          isListItem = true;
+          content = listMatch[1];
+        }
+
+        // Parse bold **text**
+        const parts = content.split(/(\*\*.*?\*\*)/ig);
+        const parsedContent = parts.map((part, i) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="font-extrabold text-indigo-100">{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        if (isListItem) {
+          return (
+            <div key={idx} className="flex items-start gap-3 py-1 ml-1">
+              <span className="mt-2 shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500/80 shadow-[0_0_8px_rgba(99,102,241,0.6)]"></span>
+              <span className="flex-1 leading-relaxed">{parsedContent}</span>
+            </div>
+          );
+        }
+
+        return (
+          <div key={idx} className={`${line.trim() === '' ? 'h-4' : 'leading-relaxed'}`}>
+            {parsedContent}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+
 const WardrobeView: React.FC<{
   items: WardrobeItem[];
   onImageUpload: (file: File) => void;
@@ -430,7 +476,9 @@ const OutfitRecommenderView: React.FC<{
                 onClick={() => setSelectedMulti(outfit)}
               >
                 <h4 className="text-lg font-black text-indigo-400 mb-2 group-hover:text-indigo-300 transition-colors">{outfit.title}</h4>
-                <p className="text-slate-400 line-clamp-3 text-sm font-medium">{outfit.description}</p>
+                <div className="text-slate-400 line-clamp-3 text-sm font-medium">
+                  <MarkdownText text={outfit.description} />
+                </div>
               </div>
             ))}
           </div>
@@ -456,9 +504,9 @@ const OutfitRecommenderView: React.FC<{
             <h3 className="text-3xl font-black text-white mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 text-transparent bg-clip-text inline-block">
               {selectedMulti.title}
             </h3>
-            <p className="text-slate-200 text-lg leading-relaxed font-medium whitespace-pre-wrap">
-              {selectedMulti.description}
-            </p>
+            <div className="text-slate-200 text-lg leading-relaxed font-medium">
+              <MarkdownText text={selectedMulti.description} />
+            </div>
           </div>
         </div>
       )}
@@ -472,7 +520,9 @@ const OutfitRecommenderView: React.FC<{
                 <h3 className="text-xl font-bold text-white">Stylist Recommendation</h3>
               </div>
             </div>
-            <p className="whitespace-pre-wrap leading-relaxed text-slate-300 text-base md:text-lg">{recommendation}</p>
+            <div className="leading-relaxed text-slate-300 text-base md:text-lg">
+              <MarkdownText text={recommendation} />
+            </div>
 
             <div className="mt-8 pt-8 border-t border-white/5">
               <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Not feeling it? Let the AI pivot.</p>
@@ -686,7 +736,9 @@ const AiOutfitRaterView: React.FC<{
               <div className="space-y-6 md:space-y-8">
                 <div className="p-5 md:p-6 bg-white/5 rounded-2xl md:rounded-3xl border border-white/5">
                   <h4 className="text-[10px] md:text-xs font-black text-indigo-400 uppercase tracking-widest mb-3 md:mb-4">Professional Critique</h4>
-                  <p className="text-slate-200 text-sm md:text-base leading-relaxed font-medium whitespace-pre-wrap">{rating.explanation}</p>
+                  <div className="text-slate-200 text-sm md:text-base leading-relaxed font-medium">
+                    <MarkdownText text={rating.explanation} />
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-slate-400 group">
