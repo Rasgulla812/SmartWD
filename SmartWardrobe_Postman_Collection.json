@@ -1,0 +1,301 @@
+{
+	"info": {
+		"_postman_id": "01234567-89ab-cdef-0123-456789abcdef",
+		"name": "Smart Wardrobe Management API",
+		"description": "API collection for Smart Wardrobe Management System (Node.js/Express)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/auth/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"jwt_token\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Logged In User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/auth/user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"auth",
+								"user"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Clothing",
+			"item": [
+				{
+					"name": "Get All Clothes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/clothing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"clothing"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Clothing Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Blue Denim Jacket\",\n    \"category\": \"Outerwear\",\n    \"color\": \"Blue\",\n    \"season\": \"Fall\",\n    \"image\": \"https://example.com/jacket.jpg\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/clothing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"clothing"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Clothing Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"season\": \"Winter\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5000/api/clothing/YOUR_ITEM_ID",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"clothing",
+								"YOUR_ITEM_ID"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Clothing Item",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/clothing/YOUR_ITEM_ID",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"clothing",
+								"YOUR_ITEM_ID"
+							]
+						}
+					}
+				},
+				{
+					"name": "Filter Clothes by Season/Color/Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/clothing/filter?season=Fall&category=Outerwear",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"clothing",
+								"filter"
+							],
+							"query": [
+								{
+									"key": "season",
+									"value": "Fall"
+								},
+								{
+									"key": "category",
+									"value": "Outerwear"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Recommendations",
+			"item": [
+				{
+					"name": "Recommend Outfit",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:5000/api/recommendations?season=Fall",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5000",
+							"path": [
+								"api",
+								"recommendations"
+							],
+							"query": [
+								{
+									"key": "season",
+									"value": "Fall"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
