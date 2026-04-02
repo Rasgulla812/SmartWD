@@ -2,8 +2,10 @@ import React, { useState, useRef, useCallback } from 'react';
 import type { WardrobeItem, View } from './types';
 import { classifyImage, recommendOutfit, rateOutfit, generateAllPossibleOutfits, type StyleRating, type MultiOutfitResult } from './services/geminiService';
 import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon, TrashIcon, XIcon } from './components/icons';
+import { AuthView } from './components/AuthView';
+import { LogOutIcon } from './components/icons';
 
-const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void }> = ({ activeView, setActiveView, theme, toggleTheme }) => {
+const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void; isAuthenticated: boolean; onLogout: () => void }> = ({ activeView, setActiveView, theme, toggleTheme, isAuthenticated, onLogout }) => {
   const navItems = [
     { id: 'wardrobe', icon: ShirtIcon, label: 'Wardrobe' },
     { id: 'recommender', icon: SparklesIcon, label: 'Outfit AI' },
@@ -16,33 +18,43 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-center py-4 md:py-5">
             <h1 className="text-xl md:text-2xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-cyan-400 text-transparent bg-clip-text">Clothe.AI</h1>
-            <nav className="hidden md:flex items-center space-x-2 bg-white/5 backdrop-blur-lg p-1.5 rounded-full border border-white/10">
-              {navItems.map((item) => (
+            {isAuthenticated && (
+              <nav className="hidden md:flex items-center space-x-2 bg-white/5 backdrop-blur-lg p-1.5 rounded-full border border-white/10">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveView(item.id)}
+                    className={`group flex items-center space-x-3 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeView === item.id
+                      ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] scale-105'
+                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                      }`}
+                  >
+                    <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+                <div className="w-px h-6 bg-white/10 mx-2"></div>
                 <button
-                  key={item.id}
-                  onClick={() => setActiveView(item.id)}
-                  className={`group flex items-center space-x-3 px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeView === item.id
-                    ? 'bg-indigo-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] scale-105'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                    }`}
+                  onClick={toggleTheme}
+                  className="p-2.5 rounded-full text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-300 group"
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
-                  <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
-                  <span>{item.label}</span>
+                  {theme === 'dark' ? (
+                    <SunIcon className="w-5 h-5 transition-transform group-hover:rotate-45" />
+                  ) : (
+                    <MoonIcon className="w-5 h-5 transition-transform group-hover:-rotate-12" />
+                  )}
                 </button>
-              ))}
-              <div className="w-px h-6 bg-white/10 mx-2"></div>
-              <button
-                onClick={toggleTheme}
-                className="p-2.5 rounded-full text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-300 group"
-                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {theme === 'dark' ? (
-                  <SunIcon className="w-5 h-5 transition-transform group-hover:rotate-45" />
-                ) : (
-                  <MoonIcon className="w-5 h-5 transition-transform group-hover:-rotate-12" />
-                )}
-              </button>
-            </nav>
+                <div className="w-px h-6 bg-white/10 mx-2"></div>
+                <button
+                  onClick={onLogout}
+                  className="p-2.5 rounded-full text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                  title="Logout"
+                >
+                  <LogOutIcon className="w-5 h-5" />
+                </button>
+              </nav>
+            )}
             <div className="md:hidden text-xs font-black uppercase tracking-widest text-slate-500">
               Smart Wardrobe
             </div>
@@ -50,33 +62,34 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-5 left-4 right-4 bg-slate-950/80 backdrop-blur-3xl z-30 flex items-center justify-around p-1.5 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-        {navItems.map((item) => (
+      {isAuthenticated && (
+        <nav className="md:hidden fixed bottom-5 left-4 right-4 bg-slate-950/80 backdrop-blur-3xl z-30 flex items-center justify-around p-1.5 rounded-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveView(item.id)}
+              className={`flex flex-col items-center space-y-1 px-4 py-3 rounded-2xl transition-all duration-300 ${activeView === item.id
+                ? 'text-indigo-400 scale-110'
+                : 'text-slate-500'
+                }`}
+            >
+              <item.icon className={`w-5 h-5 ${activeView === item.id ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+              <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
+            </button>
+          ))}
           <button
-            key={item.id}
-            onClick={() => setActiveView(item.id)}
-            className={`flex flex-col items-center space-y-1 px-4 py-3 rounded-2xl transition-all duration-300 ${activeView === item.id
-              ? 'text-indigo-400 scale-110'
-              : 'text-slate-500'
-              }`}
+            onClick={toggleTheme}
+            className="flex flex-col items-center space-y-1 px-3 py-2.5 rounded-2xl transition-all duration-300 text-slate-500"
           >
-            <item.icon className={`w-5 h-5 ${activeView === item.id ? 'stroke-[2.5px]' : 'stroke-2'}`} />
-            <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
+            {theme === 'dark' ? (
+              <SunIcon className="w-5 h-5 stroke-2" />
+            ) : (
+              <MoonIcon className="w-5 h-5 stroke-2" />
+            )}
+            <span className="text-[9px] font-black uppercase tracking-tighter">{theme === 'dark' ? 'Light' : 'Dark'}</span>
           </button>
-        ))}
-        <button
-          onClick={toggleTheme}
-          className="flex flex-col items-center space-y-1 px-3 py-2.5 rounded-2xl transition-all duration-300 text-slate-500"
-        >
-          {theme === 'dark' ? (
-            <SunIcon className="w-5 h-5 stroke-2" />
-          ) : (
-            <MoonIcon className="w-5 h-5 stroke-2" />
-          )}
-          <span className="text-[9px] font-black uppercase tracking-tighter">{theme === 'dark' ? 'Light' : 'Dark'}</span>
-        </button>
-      </nav>
+        </nav>
+      )}
     </>
   );
 };
@@ -808,7 +821,19 @@ const IntroLoader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
-  const [activeView, setActiveView] = useState<View>('wardrobe');
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token');
+    }
+    return null;
+  });
+  
+  const [activeView, setActiveView] = useState<View>(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
+      return 'wardrobe';
+    }
+    return 'auth';
+  });
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [multiOutfits, setMultiOutfits] = useState<MultiOutfitResult[]>([]);
@@ -836,6 +861,19 @@ export default function App() {
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  }, []);
+
+  const handleAuthSuccess = useCallback((token: string) => {
+    localStorage.setItem('auth_token', token);
+    setAuthToken(token);
+    setActiveView('wardrobe');
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('auth_token');
+    setAuthToken(null);
+    setActiveView('auth');
+    setWardrobeItems([]);
   }, []);
 
   const handleImageUpload = useCallback(async (file: File) => {
@@ -917,7 +955,14 @@ export default function App() {
         <div className="bg-blob" style={{ top: '-10%', left: '-5%' }}></div>
         <div className="bg-blob-2"></div>
 
-        <Header activeView={activeView} setActiveView={setActiveView} theme={theme} toggleTheme={toggleTheme} />
+        <Header 
+          activeView={activeView} 
+          setActiveView={setActiveView} 
+          theme={theme} 
+          toggleTheme={toggleTheme} 
+          isAuthenticated={!!authToken && activeView !== 'auth'} 
+          onLogout={handleLogout}
+        />
 
         <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-36 pb-32 md:pb-12 relative z-1">
           {error && (
@@ -928,6 +973,7 @@ export default function App() {
           )}
 
           <div className="animate-fade-in delay-200">
+            {activeView === 'auth' && <AuthView onAuthSuccess={handleAuthSuccess} />}
             {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} onDeleteItem={id => setWardrobeItems(prev => prev.filter(i => i.id !== id))} isLoading={isLoading} />}
             {activeView === 'recommender' && (
               <OutfitRecommenderView

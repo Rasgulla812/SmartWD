@@ -8,4 +8,4 @@ export interface WardrobeItem {
   texture?: string;
 }
 
-export type View = 'wardrobe' | 'recommender' | 'rater';
+export type View = 'auth' | 'wardrobe' | 'recommender' | 'rater';
