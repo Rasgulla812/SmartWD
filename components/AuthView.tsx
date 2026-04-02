@@ -78,14 +78,16 @@ export const AuthView: React.FC<{
 
           <div className="space-y-1 text-left">
             <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">
-              Email Address
+              {isLogin ? 'Email Address or Username' : 'Email Address'}
             </label>
             <input
-              type="email"
+              type={isLogin ? 'text' : 'email'}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={isLogin ? 'you@example.com or Username' : 'you@example.com'}
+              autoCapitalize="none"
+              autoCorrect="off"
               className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
             />
           </div>
@@ -100,6 +102,8 @@ export const AuthView: React.FC<{
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              autoCapitalize="none"
+              autoCorrect="off"
               className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
             />
           </div>
