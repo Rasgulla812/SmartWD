@@ -3,10 +3,10 @@ import type { WardrobeItem, View } from './types';
 import { classifyImage, recommendOutfit, rateOutfit, generateAllPossibleOutfits, type StyleRating, type MultiOutfitResult } from './services/geminiService';
 import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon, TrashIcon, XIcon } from './components/icons';
 import { AuthView } from './components/AuthView';
-import { LogOutIcon } from './components/icons';
 import { getUserContext } from './services/authService';
+import { LogOutIcon } from './components/icons';
 
-const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void; isAuthenticated: boolean; onLogout: () => void; username?: string }> = ({ activeView, setActiveView, theme, toggleTheme, isAuthenticated, onLogout, username }) => {
+const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void; isAuthenticated: boolean; onLogout: () => void; user: any }> = ({ activeView, setActiveView, theme, toggleTheme, isAuthenticated, onLogout, user }) => {
   const navItems = [
     { id: 'wardrobe', icon: ShirtIcon, label: 'Wardrobe' },
     { id: 'recommender', icon: SparklesIcon, label: 'Outfit AI' },
@@ -47,7 +47,11 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
                   )}
                 </button>
                 <div className="w-px h-6 bg-white/10 mx-2"></div>
-                {username && <span className="text-sm font-bold text-slate-300 px-2">{username}</span>}
+                {user && (
+                  <div className="px-4 py-1.5 bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-full text-sm font-bold shadow-inner">
+                    @{user.username || user.name}
+                  </div>
+                )}
                 <button
                   onClick={onLogout}
                   className="p-2.5 rounded-full text-red-400 hover:bg-red-500/10 transition-all duration-300"
@@ -57,8 +61,26 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
                 </button>
               </nav>
             )}
-            <div className="md:hidden text-xs font-black uppercase tracking-widest text-slate-500">
-              Smart Wardrobe
+            <div className="md:hidden flex items-center space-x-3">
+              {user && isAuthenticated && (
+                <div className="px-3 py-1 bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-full text-[10px] font-bold shadow-inner">
+                  @{user.username || user.name}
+                </div>
+              )}
+              {isAuthenticated && (
+                <button
+                  onClick={onLogout}
+                  className="p-1.5 rounded-full text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                  title="Logout"
+                >
+                  <LogOutIcon className="w-5 h-5" />
+                </button>
+              )}
+              {!isAuthenticated && (
+                <div className="text-xs font-black uppercase tracking-widest text-slate-500">
+                  Smart Wardrobe
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -830,14 +852,13 @@ export default function App() {
     return null;
   });
   
-  const [user, setUser] = useState<any>(null);
-
   const [activeView, setActiveView] = useState<View>(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
       return 'wardrobe';
     }
     return 'auth';
   });
+  const [user, setUser] = useState<any>(null);
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [multiOutfits, setMultiOutfits] = useState<MultiOutfitResult[]>([]);
@@ -864,10 +885,14 @@ export default function App() {
   }, [theme]);
 
   React.useEffect(() => {
-    if (authToken && !user) {
-      getUserContext(authToken).then(setUser).catch(() => handleLogout());
+    if (authToken) {
+      getUserContext(authToken)
+        .then(setUser)
+        .catch(console.error);
+    } else {
+      setUser(null);
     }
-  }, [authToken, user]);
+  }, [authToken]);
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -882,7 +907,6 @@ export default function App() {
   const handleLogout = useCallback(() => {
     localStorage.removeItem('auth_token');
     setAuthToken(null);
-    setUser(null);
     setActiveView('auth');
     setWardrobeItems([]);
   }, []);
@@ -973,7 +997,7 @@ export default function App() {
           toggleTheme={toggleTheme} 
           isAuthenticated={!!authToken && activeView !== 'auth'} 
           onLogout={handleLogout}
-          username={user?.name}
+          user={user}
         />
 
         <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-36 pb-32 md:pb-12 relative z-1">

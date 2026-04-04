@@ -4,17 +4,18 @@ const User = require('../models/User');
 
 // @desc    Register a user
 exports.registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, username, email, password } = req.body;
 
     try {
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ $or: [{ email }, { username }] });
 
         if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
+            return res.status(400).json({ msg: 'User already exists with this email or username' });
         }
 
         user = new User({
             name,
+            username,
             email,
             password
         });
@@ -47,12 +48,10 @@ exports.registerUser = async (req, res) => {
 
 // @desc    Authenticate user & get token
 exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
     try {
-        let user = await User.findOne({
-            $or: [{ email: email }, { name: email }]
-        });
+        let user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
 
         if (!user) {
             return res.status(400).json({ msg: 'Invalid Credentials' });

@@ -7,6 +7,7 @@ export const AuthView: React.FC<{
 }> = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,10 +20,13 @@ export const AuthView: React.FC<{
 
     try {
       if (isLogin) {
-        const data = await loginUser(email, password);
+        const identifier = email.trim().toLowerCase();
+        const data = await loginUser(identifier, password.trim());
         onAuthSuccess(data.token, null); // user info normally comes after /user fetch but token relies on App
       } else {
-        const data = await registerUser(name, email, password);
+        const payloadEmail = email.trim().toLowerCase();
+        const payloadUsername = username.trim().toLowerCase();
+        const data = await registerUser(name, payloadUsername, payloadEmail, password.trim());
         onAuthSuccess(data.token, null);
       }
     } catch (err: any) {
@@ -61,33 +65,46 @@ export const AuthView: React.FC<{
 
         <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           {!isLogin && (
-            <div className="space-y-1 text-left">
-              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
-              />
-            </div>
+            <>
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="johndoe123"
+                  className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
+                />
+              </div>
+            </>
           )}
 
           <div className="space-y-1 text-left">
             <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">
-              {isLogin ? 'Email Address or Username' : 'Email Address'}
+              {isLogin ? 'Email or Username' : 'Email Address'}
             </label>
             <input
-              type={isLogin ? 'text' : 'email'}
+              type={isLogin ? "text" : "email"}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={isLogin ? 'you@example.com or Username' : 'you@example.com'}
-              autoCapitalize="none"
-              autoCorrect="off"
+              placeholder={isLogin ? "you@example.com or johndoe123" : "you@example.com"}
               className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
             />
           </div>
@@ -102,8 +119,6 @@ export const AuthView: React.FC<{
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              autoCapitalize="none"
-              autoCorrect="off"
               className="w-full p-4 bg-slate-900/40 border border-white/10 rounded-xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all"
             />
           </div>

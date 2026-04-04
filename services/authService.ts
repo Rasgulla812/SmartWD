@@ -1,10 +1,10 @@
 const API_URL = 'http://localhost:5000/api/auth';
 
-export const registerUser = async (name: string, email: string, password: string) => {
+export const registerUser = async (name: string, username: string, email: string, password: string) => {
   const res = await fetch(`${API_URL}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, username, email, password }),
   });
 
   const data = await res.json();
@@ -12,11 +12,11 @@ export const registerUser = async (name: string, email: string, password: string
   return data;
 };
 
-export const loginUser = async (email: string, password: string) => {
+export const loginUser = async (identifier: string, password: string) => {
   const res = await fetch(`${API_URL}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ identifier, password }),
   });
 
   const data = await res.json();
