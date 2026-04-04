@@ -37,3 +37,27 @@ export const getUserContext = async (token: string) => {
   if (!res.ok) throw new Error(data.msg || 'Failed to fetch user');
   return data;
 };
+
+export const requestPasswordReset = async (identifier: string) => {
+  const res = await fetch(`${API_URL}/request-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Reset request failed');
+  return data;
+};
+
+export const resetPassword = async (identifier: string, newPassword: string) => {
+  const res = await fetch(`${API_URL}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier, newPassword }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Password reset failed');
+  return data;
+};

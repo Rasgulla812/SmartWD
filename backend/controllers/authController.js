@@ -94,3 +94,39 @@ exports.getUser = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
+
+// @desc    Request password reset (Simple version: checks if user exists)
+exports.requestPasswordReset = async (req, res) => {
+    const { identifier } = req.body;
+    try {
+        const user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        // In a real app, send email with token here. For now, we'll just allow direct reset.
+        res.json({ msg: 'User verified. Please enter your new password.' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Reset password
+exports.resetPassword = async (req, res) => {
+    const { identifier, newPassword } = req.body;
+    try {
+        let user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        await user.save();
+
+        res.json({ msg: 'Password reset successful. You can now login.' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
