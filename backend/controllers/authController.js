@@ -41,8 +41,8 @@ exports.registerUser = async (req, res) => {
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error("AUTH ERROR:", err);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
@@ -79,8 +79,8 @@ exports.loginUser = async (req, res) => {
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error("AUTH ERROR:", err);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
@@ -90,8 +90,8 @@ exports.getUser = async (req, res) => {
         const user = await User.findById(req.user.id).select('-password');
         res.json(user);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error("AUTH ERROR:", err);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
@@ -106,8 +106,8 @@ exports.requestPasswordReset = async (req, res) => {
         // In a real app, send email with token here. For now, we'll just allow direct reset.
         res.json({ msg: 'User verified. Please enter your new password.' });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error("AUTH ERROR:", err);
+        res.status(500).json({ msg: 'Server error' });
     }
 };
 
@@ -126,7 +126,7 @@ exports.resetPassword = async (req, res) => {
 
         res.json({ msg: 'Password reset successful. You can now login.' });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error("AUTH ERROR:", err);
+        res.status(500).json({ msg: 'Server error' });
     }
 };

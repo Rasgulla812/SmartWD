@@ -7,7 +7,10 @@ export const registerUser = async (name: string, username: string, email: string
     body: JSON.stringify({ name, username, email, password }),
   });
 
-  const data = await res.json();
+  const data = await res.headers.get('content-type')?.includes('application/json') 
+    ? await res.json() 
+    : { msg: await res.text() };
+
   if (!res.ok) throw new Error(data.msg || 'Registration failed');
   return data;
 };
@@ -19,7 +22,10 @@ export const loginUser = async (identifier: string, password: string) => {
     body: JSON.stringify({ identifier, password }),
   });
 
-  const data = await res.json();
+  const data = await res.headers.get('content-type')?.includes('application/json') 
+    ? await res.json() 
+    : { msg: await res.text() };
+
   if (!res.ok) throw new Error(data.msg || 'Login failed');
   return data;
 };
@@ -33,7 +39,10 @@ export const getUserContext = async (token: string) => {
     },
   });
 
-  const data = await res.json();
+  const data = await res.headers.get('content-type')?.includes('application/json') 
+    ? await res.json() 
+    : { msg: await res.text() };
+
   if (!res.ok) throw new Error(data.msg || 'Failed to fetch user');
   return data;
 };
@@ -45,7 +54,10 @@ export const requestPasswordReset = async (identifier: string) => {
     body: JSON.stringify({ identifier }),
   });
 
-  const data = await res.json();
+  const data = await res.headers.get('content-type')?.includes('application/json') 
+    ? await res.json() 
+    : { msg: await res.text() };
+
   if (!res.ok) throw new Error(data.msg || 'Reset request failed');
   return data;
 };
@@ -57,7 +69,10 @@ export const resetPassword = async (identifier: string, newPassword: string) => 
     body: JSON.stringify({ identifier, newPassword }),
   });
 
-  const data = await res.json();
+  const data = await res.headers.get('content-type')?.includes('application/json') 
+    ? await res.json() 
+    : { msg: await res.text() };
+
   if (!res.ok) throw new Error(data.msg || 'Password reset failed');
   return data;
 };
