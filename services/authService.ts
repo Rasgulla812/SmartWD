@@ -11,7 +11,11 @@ export const registerUser = async (name: string, username: string, email: string
     ? await res.json() 
     : { msg: await res.text() };
 
-  if (!res.ok) throw new Error(data.msg || 'Registration failed');
+  if (!res.ok) {
+    const errorMsg = data.msg || `Registration failed with status: ${res.status}`;
+    console.error('Registration Error Details:', { status: res.status, data });
+    throw new Error(errorMsg);
+  }
   return data;
 };
 
@@ -26,7 +30,11 @@ export const loginUser = async (identifier: string, password: string) => {
     ? await res.json() 
     : { msg: await res.text() };
 
-  if (!res.ok) throw new Error(data.msg || 'Login failed');
+  if (!res.ok) {
+    const errorMsg = data.msg || `Login failed with status: ${res.status}`;
+    console.error('Login Error Details:', { status: res.status, data });
+    throw new Error(errorMsg);
+  }
   return data;
 };
 
