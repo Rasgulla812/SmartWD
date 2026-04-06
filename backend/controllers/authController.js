@@ -6,6 +6,11 @@ const User = require('../models/User');
 exports.registerUser = async (req, res) => {
     const { name, username, email, password } = req.body;
 
+    // Check for missing fields
+    if (!name || !username || !email || !password) {
+        return res.status(400).json({ msg: 'Please enter all fields: name, username, email, and password.' });
+    }
+
     try {
         let user = await User.findOne({ $or: [{ email }, { username }] });
 
@@ -36,30 +41,45 @@ exports.registerUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '5 days' },
             (err, token) => {
-                if (err) throw err;
+                if (err) {
+                    console.error("JWT ERROR:", err);
+                    return res.status(500).json({ msg: 'Token generation failed' });
+                }
                 res.status(201).json({ token });
             }
         );
     } catch (err) {
         console.error("AUTH ERROR:", err);
-        res.status(500).json({ msg: 'Server error' });
+        // Catch specific Mongoose validation or duplicate key errors
+        if (err.name === 'ValidationError') {
+            const messages = Object.values(err.errors).map(val => val.message);
+            return res.status(400).json({ msg: messages.join(', ') });
+        }
+        res.status(500).json({ msg: 'Server error: ' + (err.message || 'Unknown error') });
     }
 };
 
 // @desc    Authenticate user & get token
 exports.loginUser = async (req, res) => {
     const { identifier, password } = req.body;
+    console.log(`Login attempt received for: ${identifier}`);
+
+    if (!identifier || !password) {
+        return res.status(400).json({ msg: 'Please enter all fields (Email/Username and Password)' });
+    }
 
     try {
         let user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
 
         if (!user) {
+            console.log(`Login failed: User not found (${identifier})`);
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
+            console.log(`Login failed: Incorrect password for ${identifier}`);
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
@@ -69,18 +89,27 @@ exports.loginUser = async (req, res) => {
             }
         };
 
+        if (!process.env.JWT_SECRET) {
+            console.error("FATAL ERROR: JWT_SECRET is not defined in environment variables");
+            return res.status(500).json({ msg: 'Server configuration error' });
+        }
+
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
             { expiresIn: '5 days' },
             (err, token) => {
-                if (err) throw err;
+                if (err) {
+                    console.error("JWT ERROR:", err);
+                    return res.status(500).json({ msg: 'Token generation failed' });
+                }
+                console.log(`Login successful: ${identifier}`);
                 res.json({ token });
             }
         );
     } catch (err) {
-        console.error("AUTH ERROR:", err);
-        res.status(500).json({ msg: 'Server error' });
+        console.error("LOGIN AUTH ERROR:", err);
+        res.status(500).json({ msg: 'Server error during login: ' + (err.message || 'Unknown error') });
     }
 };
 
