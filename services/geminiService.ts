@@ -67,6 +67,8 @@ const executeWithFallback = async <T>(operation: (aiInstance: any) => Promise<T>
         } else {
           if (message.includes('429') || message.toLowerCase().includes('quota')) {
             throw new Error(`API Quota Reached for all available keys. Please wait a moment or check your Google AI Studio dashboard.`);
+          } else if (message.includes('503')) {
+            throw new Error(`AI service is busy right now. Please try again in a few moments.`);
           } else {
             throw new Error(`All API keys failed for ${context}. Last error: ${message}`);
           }

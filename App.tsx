@@ -304,6 +304,11 @@ const WardrobeView: React.FC<{
                         {item.texture}
                       </span>
                     )}
+                    {item.occasion && (
+                      <span className="text-[9px] font-black uppercase tracking-tighter bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                        {item.occasion}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -370,6 +375,14 @@ const WardrobeView: React.FC<{
                     <span className="text-[10px] uppercase font-black tracking-widest text-slate-500">Texture</span>
                     <span className="px-5 py-2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-sm md:text-base">
                       {selectedItem.texture}
+                    </span>
+                  </div>
+                )}
+                {selectedItem.occasion && (
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-slate-500">Occasion</span>
+                    <span className="px-5 py-2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-sm md:text-base">
+                      {selectedItem.occasion}
                     </span>
                   </div>
                 )}
@@ -843,6 +856,88 @@ const IntroLoader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   );
 };
 
+const ManualUploadModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: { name: string; color: string; occasion: string }) => void;
+  imageUrl: string;
+}> = ({ isOpen, onClose, onSave, imageUrl }) => {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState('');
+  const [occasion, setOccasion] = useState('');
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[110] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 md:p-10 animate-fade-in">
+      <div className="max-w-4xl w-full bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-3xl overflow-hidden flex flex-col md:flex-row animate-fade-up">
+        <div className="md:w-1/2 h-64 md:h-auto bg-slate-800 relative">
+          <img src={imageUrl} alt="Uploaded Item" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+        </div>
+        
+        <div className="md:w-1/2 p-8 md:p-12 space-y-8">
+          <div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-2">Manual Detail Entry</h3>
+            <p className="text-slate-400 font-medium">AI service is busy or failed. Please provide details manually.</p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Clothing Type</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Linen Shirt, Blue Jeans"
+                className="w-full p-4 bg-slate-950/50 border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all font-medium"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Color</label>
+              <input
+                type="text"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="e.g. Navy Blue, Sand"
+                className="w-full p-4 bg-slate-950/50 border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all font-medium"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Occasion</label>
+              <input
+                type="text"
+                value={occasion}
+                onChange={(e) => setOccasion(e.target.value)}
+                placeholder="e.g. Casual, Formal, Gym"
+                className="w-full p-4 bg-slate-950/50 border border-white/10 rounded-2xl text-white placeholder:text-slate-600 focus:border-indigo-500 outline-none transition-all font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button
+              onClick={onClose}
+              className="flex-1 py-4 border border-white/10 rounded-2xl text-white font-bold hover:bg-white/5 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={!name || !color}
+              onClick={() => onSave({ name, color, occasion })}
+              className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-black rounded-2xl transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+            >
+              Save Item
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
   const [authToken, setAuthToken] = useState<string | null>(() => {
@@ -867,6 +962,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [rethinkCount, setRethinkCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showManualUpload, setShowManualUpload] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') || 'dark';
@@ -925,12 +1022,32 @@ export default function App() {
         imageUrl: URL.createObjectURL(file),
       };
       setWardrobeItems(prev => [newItem, ...prev]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "An unknown error occurred.");
+    } catch (e: any) {
+      const msg = e instanceof Error ? e.message : "An unknown error occurred.";
+      setError(msg);
+      // Trigger manual upload fallback
+      setPendingFile(file);
+      setShowManualUpload(true);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  const handleManualSave = useCallback((data: { name: string; color: string; occasion: string }) => {
+    if (pendingFile) {
+      const newItem: WardrobeItem = {
+        id: new Date().toISOString(),
+        name: data.name,
+        color: data.color,
+        occasion: data.occasion,
+        imageUrl: URL.createObjectURL(pendingFile),
+      };
+      setWardrobeItems(prev => [newItem, ...prev]);
+      setShowManualUpload(false);
+      setPendingFile(null);
+      setError(null); // Clear error since we handled it manually
+    }
+  }, [pendingFile]);
 
   const handleGetRecommendation = useCallback(async (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => {
     setIsLoading(true);
@@ -1026,6 +1143,13 @@ export default function App() {
             {activeView === 'rater' && <AiOutfitRaterView onRateOutfit={handleRateOutfit} rating={styleRating} isLoading={isLoading} />}
           </div>
         </main>
+
+        <ManualUploadModal 
+          isOpen={showManualUpload} 
+          onClose={() => setShowManualUpload(false)} 
+          onSave={handleManualSave}
+          imageUrl={pendingFile ? URL.createObjectURL(pendingFile) : ''}
+        />
       </div>
     </>
   );
