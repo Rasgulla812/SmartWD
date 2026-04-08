@@ -12,10 +12,10 @@ exports.registerUser = async (req, res) => {
     }
 
     try {
-        let user = await User.findOne({ $or: [{ email }, { username }] });
-
+        // Check if username is taken
+        let user = await User.findOne({ username });
         if (user) {
-            return res.status(400).json({ msg: 'User already exists with this email or username' });
+            return res.status(400).json({ msg: 'Username is already taken. Please choose another one.' });
         }
 
         user = new User({
@@ -69,6 +69,9 @@ exports.loginUser = async (req, res) => {
     }
 
     try {
+        // Find user by either email or username
+        // Note: If multiple users share an email, findOne will return the first one.
+        // Users are encouraged to use their unique username for clarity.
         let user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
 
         if (!user) {
@@ -144,6 +147,9 @@ exports.requestPasswordReset = async (req, res) => {
 exports.resetPassword = async (req, res) => {
     const { identifier, newPassword } = req.body;
     try {
+        // Find user by either email or username. 
+        // If they use email, it will reset the first account found with that email.
+        // It's safer to use username.
         let user = await User.findOne({ $or: [{ email: identifier }, { username: identifier }] });
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
