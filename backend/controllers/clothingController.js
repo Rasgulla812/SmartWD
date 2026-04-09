@@ -13,7 +13,7 @@ exports.getClothes = async (req, res) => {
 
 // @desc    Add new clothing item
 exports.addClothingItem = async (req, res) => {
-    const { name, category, color, season, image } = req.body;
+    const { name, category, color, season, image, fabric, texture, occasion } = req.body;
 
     try {
         const newItem = new ClothingItem({
@@ -22,6 +22,9 @@ exports.addClothingItem = async (req, res) => {
             color,
             season,
             image,
+            fabric,
+            texture,
+            occasion,
             user: req.user.id
         });
 
@@ -35,7 +38,7 @@ exports.addClothingItem = async (req, res) => {
 
 // @desc    Update clothing item
 exports.updateClothingItem = async (req, res) => {
-    const { name, category, color, season, image } = req.body;
+    const { name, category, color, season, image, fabric, texture, occasion } = req.body;
 
     // Build item object
     const itemFields = {};
@@ -44,6 +47,9 @@ exports.updateClothingItem = async (req, res) => {
     if (color) itemFields.color = color;
     if (season) itemFields.season = season;
     if (image) itemFields.image = image;
+    if (fabric) itemFields.fabric = fabric;
+    if (texture) itemFields.texture = texture;
+    if (occasion) itemFields.occasion = occasion;
 
     try {
         let item = await ClothingItem.findById(req.params.id);

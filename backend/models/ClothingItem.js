@@ -12,20 +12,29 @@ const ClothingItemSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        required: true,
-        enum: ['Top', 'Bottom', 'Footwear', 'Outerwear', 'Accessories']
+        required: false,
+        default: 'Top'
     },
     color: {
         type: String,
         required: true
     },
+    fabric: {
+        type: String
+    },
+    texture: {
+        type: String
+    },
+    occasion: {
+        type: String
+    },
     season: {
         type: String,
-        required: true,
-        enum: ['Summer', 'Winter', 'Spring', 'Fall', 'All']
+        required: false,
+        default: 'All'
     },
     image: {
-        type: String // URL to image if stored in S3/Cloudinary or local path
+        type: String // We'll store URL or Base64
     },
     dateAdded: {
         type: Date,

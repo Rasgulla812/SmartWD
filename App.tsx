@@ -4,6 +4,7 @@ import { classifyImage, recommendOutfit, rateOutfit, generateAllPossibleOutfits,
 import { ShirtIcon, SparklesIcon, WandIcon, UploadCloudIcon, LoaderIcon, DownloadIcon, StarIcon, ThermometerIcon, SunIcon, MoonIcon, CameraIcon, ChevronDownIcon, TrashIcon, XIcon } from './components/icons';
 import { AuthView } from './components/AuthView';
 import { getUserContext } from './services/authService';
+import { fetchClothes, addClothing, deleteClothing } from './services/clothingService';
 import { LogOutIcon } from './components/icons';
 
 const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; theme: string; toggleTheme: () => void; isAuthenticated: boolean; onLogout: () => void; user: any }> = ({ activeView, setActiveView, theme, toggleTheme, isAuthenticated, onLogout, user }) => {
@@ -986,8 +987,16 @@ export default function App() {
       getUserContext(authToken)
         .then(setUser)
         .catch(console.error);
+
+      fetchClothes(authToken)
+        .then(setWardrobeItems)
+        .catch(err => {
+          console.error('Failed to fetch wardrobe:', err);
+          setError('Could not sync wardrobe with server.');
+        });
     } else {
       setUser(null);
+      setWardrobeItems([]);
     }
   }, [authToken]);
 
@@ -1008,19 +1017,33 @@ export default function App() {
     setWardrobeItems([]);
   }, []);
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const handleImageUpload = useCallback(async (file: File) => {
+    if (!authToken) return;
     setIsLoading(true);
     setError(null);
     try {
-      const { name, color, fabric, texture } = await classifyImage(file);
-      const newItem: WardrobeItem = {
-        id: new Date().toISOString(),
+      const [{ name, color, fabric, texture }, base64Image] = await Promise.all([
+        classifyImage(file),
+        fileToBase64(file)
+      ]);
+
+      const newItem = await addClothing(authToken, {
         name,
         color,
         fabric,
         texture,
-        imageUrl: URL.createObjectURL(file),
-      };
+        imageUrl: base64Image,
+      });
+      
       setWardrobeItems(prev => [newItem, ...prev]);
     } catch (e: any) {
       const msg = e instanceof Error ? e.message : "An unknown error occurred.";
@@ -1031,23 +1054,31 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [authToken]);
 
-  const handleManualSave = useCallback((data: { name: string; color: string; occasion: string }) => {
-    if (pendingFile) {
-      const newItem: WardrobeItem = {
-        id: new Date().toISOString(),
-        name: data.name,
-        color: data.color,
-        occasion: data.occasion,
-        imageUrl: URL.createObjectURL(pendingFile),
-      };
-      setWardrobeItems(prev => [newItem, ...prev]);
-      setShowManualUpload(false);
-      setPendingFile(null);
-      setError(null); // Clear error since we handled it manually
+  const handleManualSave = useCallback(async (data: { name: string; color: string; occasion: string }) => {
+    if (pendingFile && authToken) {
+      setIsLoading(true);
+      try {
+        const base64Image = await fileToBase64(pendingFile);
+        const newItem = await addClothing(authToken, {
+          name: data.name,
+          color: data.color,
+          occasion: data.occasion,
+          imageUrl: base64Image,
+        });
+
+        setWardrobeItems(prev => [newItem, ...prev]);
+        setShowManualUpload(false);
+        setPendingFile(null);
+        setError(null);
+      } catch (err) {
+        setError("Failed to save item manually.");
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [pendingFile]);
+  }, [pendingFile, authToken]);
 
   const handleGetRecommendation = useCallback(async (context?: { occasion?: string; weather?: string; mood?: string; style?: string }) => {
     setIsLoading(true);
@@ -1127,7 +1158,16 @@ export default function App() {
 
           <div className="animate-fade-in delay-200">
             {activeView === 'auth' && <AuthView onAuthSuccess={handleAuthSuccess} />}
-            {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} onDeleteItem={id => setWardrobeItems(prev => prev.filter(i => i.id !== id))} isLoading={isLoading} />}
+            {activeView === 'wardrobe' && <WardrobeView items={wardrobeItems} onImageUpload={handleImageUpload} onDeleteItem={async id => {
+              if (authToken) {
+                try {
+                  await deleteClothing(authToken, id);
+                  setWardrobeItems(prev => prev.filter(i => i.id !== id));
+                } catch (err) {
+                  setError("Failed to delete item.");
+                }
+              }
+            }} isLoading={isLoading} />}
             {activeView === 'recommender' && (
               <OutfitRecommenderView
                 wardrobeItems={wardrobeItems}

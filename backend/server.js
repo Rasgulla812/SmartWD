@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const clothingRoutes = require('./routes/clothingRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 
@@ -13,13 +14,15 @@ const app = express();
 connectDB();
 
 // Init Middleware
-app.use(express.json({ extended: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 // Define Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/clothing', clothingRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/', (req, res) => res.send('API Running'));
 
