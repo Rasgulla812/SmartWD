@@ -1,15 +1,22 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const MODEL_NAME = 'gemini-2.0-flash'; // Optimized for speed and quality
+const MODEL_NAME = 'gemini-2.5-flash-lite'; // Optimized for speed and quality
 
 let genAI;
 
+let currentKeyIndex = 0;
+
 const getAI = () => {
+    const rawKeys = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    if (!rawKeys) {
+        throw new Error('GEMINI_API_KEY or VITE_GEMINI_API_KEY is not configured in backend .env');
+    }
+    const apiKeys = rawKeys.split(',').map(k => k.trim()).filter(k => k.length > 0);
+
+    // For simplicity, we use the first available key, 
+    // or we could implement rotation here if needed.
+    const apiKey = apiKeys[currentKeyIndex];
     if (!genAI) {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error('GEMINI_API_KEY is not configured in backend .env');
-        }
         genAI = new GoogleGenerativeAI(apiKey);
     }
     return genAI;
@@ -17,7 +24,7 @@ const getAI = () => {
 
 exports.classifyClothing = async (base64Image) => {
     const ai = getAI();
-    const model = ai.getGenerativeModel({ 
+    const model = ai.getGenerativeModel({
         model: MODEL_NAME,
         systemInstruction: "You are a world-class textile and fashion expert. You can identify any fabric or texture just by looking at a photo. You only output pure JSON."
     });
@@ -48,7 +55,7 @@ exports.classifyClothing = async (base64Image) => {
 
     const response = await result.response;
     let text = response.text();
-    
+
     // Clean JSON if it's wrapped in code blocks
     if (text.includes('```')) {
         text = text.replace(/```json\n?|```/g, '').trim();
@@ -61,7 +68,7 @@ exports.generateRecommendation = async (clothes, context = {}, recent = []) => {
     const ai = getAI();
     const model = ai.getGenerativeModel({ model: MODEL_NAME });
 
-    const itemDescriptions = clothes.map(item => 
+    const itemDescriptions = clothes.map(item =>
         `${item.name} (${item.color}, ${item.fabric}, ${item.texture})`
     ).join('\n - ');
 
@@ -107,12 +114,12 @@ exports.rateOutfit = async (description, venue, weather, preference, strict) => 
 
 exports.generateLookbook = async (wardrobeItems) => {
     const ai = getAI();
-    const model = ai.getGenerativeModel({ 
+    const model = ai.getGenerativeModel({
         model: MODEL_NAME,
         generationConfig: { responseMimeType: "application/json" }
     });
 
-    const itemDescriptions = wardrobeItems.map(item => 
+    const itemDescriptions = wardrobeItems.map(item =>
         `${item.name} (${item.color}, ${item.fabric}, ${item.texture})`
     ).join('\n - ');
 

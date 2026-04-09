@@ -120,38 +120,39 @@ const Header: React.FC<{ activeView: View; setActiveView: (view: View) => void; 
 };
 
 const MarkdownText: React.FC<{ text: string; className?: string }> = ({ text, className = "" }) => {
-  if (!text) return null;
-  
-  // Split by newlines and filter out truly empty lines
+  // FIX: Add this check to handle cases where 'text' isn't a string or is missing
+  if (!text || typeof text !== 'string') return null;
+
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  
+  // ... rest of your code
+
   return (
     <div className={`space-y-4 ${className}`}>
       {lines.map((line, idx) => {
         // Standardize: Remove any leading markdown markers to replace with our custom pointers
         const cleanedContent = line.replace(/^[*+-]\s+/, '').replace(/^\d+\.\s+/, '').trim();
-        
+
         // Simple and robust bold detection
         const parts = cleanedContent.split(/(\*\*[^*]+\*\*)/g);
-        
+
         return (
           <div key={idx} className="flex items-start gap-3 group">
             {/* High-visibility Stylist Pointer */}
             <div className="mt-2.5 shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)] group-hover:scale-125 transition-transform duration-300" />
-            
+
             <div className="flex-1 leading-relaxed text-slate-300 font-medium">
               {parts.map((part, i) => {
                 // If the part matches our bold pattern
                 if (part.startsWith('**') && part.endsWith('**')) {
                   const boldText = part.substring(2, part.length - 2);
                   return (
-                    <strong 
-                      key={i} 
-                      className="font-black text-white" 
-                      style={{ 
-                        fontWeight: 900, 
+                    <strong
+                      key={i}
+                      className="font-black text-white"
+                      style={{
+                        fontWeight: 900,
                         color: 'inherit', // Inherits from parent or let CSS classes handle it
-                        textShadow: '0 0 1px rgba(255,255,255,0.2)' 
+                        textShadow: '0 0 1px rgba(255,255,255,0.2)'
                       }}
                     >
                       {boldText}
@@ -876,7 +877,7 @@ const ManualUploadModal: React.FC<{
           <img src={imageUrl} alt="Uploaded Item" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
         </div>
-        
+
         <div className="md:w-1/2 p-8 md:p-12 space-y-8">
           <div>
             <h3 className="text-2xl md:text-3xl font-black text-white mb-2">Manual Detail Entry</h3>
@@ -947,7 +948,7 @@ export default function App() {
     }
     return null;
   });
-  
+
   const [activeView, setActiveView] = useState<View>(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
       return 'wardrobe';
@@ -1043,7 +1044,7 @@ export default function App() {
         texture,
         imageUrl: base64Image,
       });
-      
+
       setWardrobeItems(prev => [newItem, ...prev]);
     } catch (e: any) {
       const msg = e instanceof Error ? e.message : "An unknown error occurred.";
@@ -1085,7 +1086,7 @@ export default function App() {
     setError(null);
     setRecommendation(null);
     try {
-      const result = await recommendOutfit(wardrobeItems, context, recentRecommendations);
+      const result = await recommendOutfit(wardrobeItems, context);
       setRecommendation(result);
       // Track valid unique recommendations for history
       if (result && !recentRecommendations.includes(result)) {
@@ -1138,12 +1139,12 @@ export default function App() {
         <div className="bg-blob" style={{ top: '-10%', left: '-5%' }}></div>
         <div className="bg-blob-2"></div>
 
-        <Header 
-          activeView={activeView} 
-          setActiveView={setActiveView} 
-          theme={theme} 
-          toggleTheme={toggleTheme} 
-          isAuthenticated={!!authToken && activeView !== 'auth'} 
+        <Header
+          activeView={activeView}
+          setActiveView={setActiveView}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          isAuthenticated={!!authToken && activeView !== 'auth'}
           onLogout={handleLogout}
           user={user}
         />
@@ -1184,9 +1185,9 @@ export default function App() {
           </div>
         </main>
 
-        <ManualUploadModal 
-          isOpen={showManualUpload} 
-          onClose={() => setShowManualUpload(false)} 
+        <ManualUploadModal
+          isOpen={showManualUpload}
+          onClose={() => setShowManualUpload(false)}
           onSave={handleManualSave}
           imageUrl={pendingFile ? URL.createObjectURL(pendingFile) : ''}
         />

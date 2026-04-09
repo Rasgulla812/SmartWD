@@ -41,28 +41,31 @@ export const classifyImage = async (file: File): Promise<{ name: string; color: 
   return await res.json();
 };
 
-export const recommendOutfit = async (
-  wardrobeItems: WardrobeItem[],
-  context?: { occasion?: string; weather?: string; mood?: string; style?: string },
-  recentRecommendations?: string[]
-): Promise<string> => {
-  const query = new URLSearchParams();
-  if (context?.occasion) query.append('occasion', context.occasion);
-  if (context?.weather) query.append('weather', context.weather);
-  if (context?.style) query.append('style', context.style);
-  if (recentRecommendations) query.append('recent', recentRecommendations.join(','));
+export const recommendOutfit = async (items: WardrobeItem[], context: any, recent: string[] = []): Promise<string> => {
+  try {
+    const response = await fetch('/api/recommendations', {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ items, context, recent })
+    });
 
-  const res = await fetch(`/api/recommendations?${query.toString()}`, {
-    headers: getHeaders(),
-  });
+    // FIX: Check if the response is actually OK before parsing JSON
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Server Error Details:", errorText);
+      throw new Error("The AI Stylist is currently unavailable.");
+    }
 
-  if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.msg || 'Failed to get recommendation');
+    const data = await response.json();
+    if (data.recommendation) {
+      return data.recommendation;
+    }
+    if (data.error) throw new Error(data.error);
+    return "Unable to generate recommendation at this time.";
+  } catch (error: any) {
+    console.error("Outfit Gen Error:", error);
+    return `Error: ${error.message || "Could not generate outfit."}`;
   }
-  
-  const data = await res.json();
-  return data.recommendation;
 };
 
 // These two could also be moved to backend, but for now I'll leave them as placeholders 
@@ -89,5 +92,5 @@ export const generateAllPossibleOutfits = async (wardrobeItems: WardrobeItem[]):
 };
 
 export const generateImage = async (prompt: string): Promise<string> => {
-    throw new Error("Image generation not yet implemented on backend");
+  throw new Error("Image generation not yet implemented on backend");
 };

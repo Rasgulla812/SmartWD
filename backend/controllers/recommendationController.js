@@ -3,7 +3,7 @@ const aiService = require('../services/aiService');
 
 // @desc    Recommend outfit using AI
 exports.recommendOutfit = async (req, res) => {
-    const { occasion, weather, style, recent } = req.query;
+    const { occasion, weather, style, recent } = req.body;
 
     try {
         const clothes = await ClothingItem.find({ user: req.user.id });
@@ -12,10 +12,12 @@ exports.recommendOutfit = async (req, res) => {
             return res.status(400).json({ msg: 'Your wardrobe is empty' });
         }
 
+        const lastRecommendations = Array.isArray(recent) ? recent : (recent ? recent.split(',') : []);
+
         const recommendation = await aiService.generateRecommendation(
             clothes, 
             { occasion, weather, style },
-            recent ? recent.split(',') : []
+            lastRecommendations
         );
 
         res.json({ recommendation });
